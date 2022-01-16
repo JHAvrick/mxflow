@@ -1,0 +1,129 @@
+/*
+.mx-flow-container {
+     width: 100%;
+     height: 100%;
+}
+*/
+
+/**
+ * Styles applied to the top-level node container.
+ */
+.mxflow-node {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    -webkit-box-shadow: 1px 3px 15px -6px rgba(0,0,0,0.6); 
+    box-shadow: 1px 3px 15px -6px rgba(0,0,0,0.6);
+}
+
+/**
+ * Styles applied to each list of edges in each node
+ */
+.mxflow-edge-group {
+    position: absolute;
+    list-style-type: none;
+    margin: 0;
+    padding: 1.5rem 0;
+    height: 100%;
+}
+
+/**
+ * Applied specifically to input edge list
+ */
+.mxflow-edge-group[data-mxflow-edge-group="inputs"] {
+    top: 0;
+    left: 0;
+}
+
+/**
+ * Applied specifically to output edge list
+ */
+ .mxflow-edge-group[data-mxflow-edge-group="outputs"] {
+    top: 0;
+    right: 0;
+}
+
+/**
+ * For lasso select tool
+ */
+.mxflow-lasso {
+    background: rgba(0, 183, 255, 0.199);
+}
+
+.mxflow-edge {
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.mxflow-ghost-link {
+    fill: black;
+    stroke: black;
+    opacity: .75;
+    stroke-width: 3px;
+    stroke-dasharray: 6;
+    z-index: 1000;
+    transition: stroke 100ms;
+    fill: none;
+    pointer-events: none;
+    animation: dash 12s linear infinite;
+}
+
+.mxflow-link--invalid {
+    stroke: red;
+    transition: stroke 100ms;
+}
+
+.mxflow-link--valid {
+    stroke: limegreen;
+    transition: stroke 100ms;
+}
+
+@keyframes dash {
+    from {
+      stroke-dashoffset: 1000;
+    }
+}
+
+.mxflow-link--selected .mx-flow-link-inner {
+    stroke: rgb(0, 195, 255);
+}
+
+.mxflow-link-outer {
+    stroke: rgb(0, 195, 255);;
+    opacity: 0;
+    stroke-width: 25px;
+    z-index: 1000;
+    transition: stroke 100ms;
+    cursor: pointer;
+    fill: none;
+}
+
+.mxflow-link-outer:hover {
+    opacity: .15;
+}
+
+.mxflow-link-outer:hover + .mx-flow-link-inner {
+    stroke: rgb(0, 195, 255);
+}
+
+.mxflow-link-inner {
+    stroke: rgb(0, 0, 0);
+    opacity: 1;
+    stroke-width: 2px;
+    z-index: 1000;
+    transition: stroke 100ms;
+    fill: none;
+    cursor: pointer;
+}
+
+.mxflow-link-inner:hover {
+    stroke: rgb(0, 255, 234);;
+}
+
+.mxflow-grid-inner {
+    stroke:rgb(0, 195, 255);
+}
+
+.mxflow-grid-outer {
+    stroke:red;
+}

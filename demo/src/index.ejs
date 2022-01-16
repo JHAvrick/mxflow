@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            box-sizing: border-box;;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        .node-content {
+            width: 100px;
+            height: 100px;
+            background: aqua;
+        }
+
+        .mxflow-item--selected .node-content {
+            background: rgb(127, 157, 255);
+        }
+
+        .mxflow-item--preselected .node-content {
+            background: rgb(255, 208, 0);
+        }
+
+        .edge-content {
+            width: 15px;
+            height: 15px;
+            /* border-radius: 100%; */
+            background: rgb(247, 0, 255);
+        }
+
+        .input-edge {
+            background: rgb(247, 0, 255);
+        }
+
+        .output-edge {
+            background: rgb(255, 187, 0);
+        }
+
+    </style>
+</head>
+<body>
+    <div id="root" style="width:100vw; height:100vh; overflow:hidden;">
+
+    </div>
+</body>
+</html>

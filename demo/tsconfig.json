@@ -1,0 +1,41 @@
+{
+    "compilerOptions": {
+      "module": "es2015",
+      "moduleResolution": "node",
+      "target": "es6",
+      "strict": true,
+      "strictNullChecks": true,
+      "strictFunctionTypes": true,
+      "useUnknownInCatchVariables": false,
+      "jsx": "preserve",
+      "importHelpers": true,
+      "resolveJsonModule": true,
+      "allowJs": true,
+      "skipLibCheck": true,
+      "esModuleInterop": true,
+      "allowSyntheticDefaultImports": true,
+      "sourceMap": true,
+      "declaration": true,
+      "baseUrl": ".",
+      "outDir": "dist/lib",
+      "paths": {
+        "@/*": ["src/*"],
+        "styles/*": ["../src/styles/*"],
+        "types/*": ["../src/types/*"],
+        "util/*": ["../src/util/*"]
+      },
+      "lib": [
+        "esnext",
+        "dom",
+        "dom.iterable",
+        "scripthost"
+      ]
+    },
+    "include": [
+      "src/**/*.ts",
+    ],
+    "exclude": [
+      "node_modules"
+    ]
+  }
+  

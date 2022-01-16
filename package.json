@@ -1,0 +1,57 @@
+{
+  "name": "mxflow",
+  "version": "0.1.1",
+  "private": false,
+  "scripts": {
+    "demo": "webpack-dev-server --config ./demo/webpack.config.js",
+    "dev": "webpack -w --stats-error-details",
+    "build": "ts-node -r tsconfig-paths/register ./src/index.ts",
+    "madge": "madge --warning --circular --extensions ts ./src"
+  },
+  "madge": {
+    "tsConfig": "./tsconfig.json"
+  },
+  "types": "./dist/lib/index.d.ts",
+  "exports": {
+    ".": "./dist/mxflow.min.js",
+    "./themes/": "./dist/themes/"
+  },
+  "dependencies": {
+    "@types/lodash": "^4.14.172",
+    "@types/webpack-env": "^1.16.2",
+    "hotkeys-js": "^3.8.7",
+    "lodash": "^4.17.21",
+    "nanoid": "^3.1.20",
+    "sass-loader": "^12.1.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.15.5",
+    "@babel/preset-env": "^7.15.6",
+    "@types/chai": "^4.2.15",
+    "@types/mocha": "^8.2.0",
+    "@types/node": "^16.10.3",
+    "babel-loader": "^8.2.2",
+    "babel-preset-vue": "^2.0.2",
+    "chai": "^4.3.4",
+    "clean-webpack-plugin": "^4.0.0",
+    "cross-env": "^7.0.3",
+    "css-loader": "^6.4.0",
+    "css-minimizer-webpack-plugin": "^3.1.1",
+    "file-loader": "^6.2.0",
+    "html-webpack-plugin": "^5.3.2",
+    "mini-css-extract-plugin": "^2.4.1",
+    "mocha": "^8.3.0",
+    "sass": "^1.42.1",
+    "style-loader": "^3.3.1",
+    "ts-loader": "^9.2.3",
+    "ts-node": "^9.1.1",
+    "tsconfig-paths": "^3.10.1",
+    "tsconfig-paths-webpack-plugin": "^3.5.1",
+    "tslib": "^2.3.0",
+    "typescript": "4.4.3",
+    "webpack": "^5.39.1",
+    "webpack-cli": "^4.7.2",
+    "webpack-dev-server": "^4.7.3",
+    "webpack-node-externals": "^3.0.0"
+  }
+}
