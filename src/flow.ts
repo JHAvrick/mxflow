@@ -45,6 +45,8 @@ const DefaultOpts: FlowTypes.Options = {
     beforeNodeRemoved: () => true,
     beforeEdgeRemoved: () => true,
     beforeLinkRemoved: () => true,
+    renderContext: () => {},
+    render: () => {},
     drag: {
         cancelSelector: '',
         handleSelector: '',

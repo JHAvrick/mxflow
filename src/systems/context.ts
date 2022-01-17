@@ -13,14 +13,19 @@ function MXFlowContextTool(api: FlowTypes.Api, methods: ReturnType<typeof getPub
         }
     }
 
-    const onDown = () => {
-        methods.closeContextMenu();
+    const onDown = () => methods.closeContextMenu();
+    const onWheel = () =>  methods.closeContextMenu();
+    
+    api.dom.containerEl.addEventListener("wheel", onWheel);
+    const dispose = () => {
+        api.dom.containerEl.removeEventListener("wheel", onWheel);
     }
 
     return <const> {
         name: 'context',
         onContextMenu,
-        onDown
+        onDown,
+        dispose
     }
 }
 

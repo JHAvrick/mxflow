@@ -12,8 +12,8 @@
     display: flex;
     justify-content: space-between;
     align-items: stretch;
-    -webkit-box-shadow: 1px 3px 15px -6px rgba(0,0,0,0.6); 
-    box-shadow: 1px 3px 15px -6px rgba(0,0,0,0.6);
+    /* -webkit-box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+    box-shadow: 0 .125rem .25rem rgba(0,0,0,.075); */
 }
 
 /**
@@ -25,6 +25,11 @@
     margin: 0;
     padding: 1.5rem 0;
     height: 100%;
+}
+
+.mxflow-edge {
+    width: fit-content;
+    height: fit-content;
 }
 
 /**

@@ -6,22 +6,43 @@ import { getPublicInterface } from '../methods';
  * MXFlow tool which handles lasso selection
  */
 function MXFlowLinkerTool(api: FlowTypes.Api, methods: ReturnType<typeof getPublicInterface>) : FlowTypes.ActionHandler {
-    const state = api.state; 
+    const state = api.state;
     const dom = api.dom;
     let active = false;
     let fromEdge: FlowTypes.Edge | null = null;
 
-    const applyGhostLinkPosition = (e: PointerEvent) => {
+    const applyGhostLinkPosition = (e: PointerEvent, toEdge?: FlowTypes.Edge) => {
         let transform = state.transform;
         let containerRect = dom.containerEl.getBoundingClientRect();
-        let fromEdgeRect = <DOMRect> fromEdge!.el.getBoundingClientRect();
+        //let fromEdgeRect = <DOMRect> fromEdge!.el.getBoundingClientRect();
 
         let offsetY = containerRect.top;
         let offsetX = containerRect.left;
-        let x1 = (fromEdgeRect.right - offsetX);
-        let y1 = (fromEdgeRect.top - offsetY) +  (fromEdgeRect.height / 2);
-        let x2 = e.pageX - offsetX;
-        let y2 = e.pageY - offsetY;
+
+        let latchFrom = FlowUtil.getEdgeLatchPos(fromEdge!, offsetX, offsetY);
+        let x1 = latchFrom.x;
+        let y1 = latchFrom.y;
+
+        let x2, y2;
+        if (toEdge){
+            let latchTo = FlowUtil.getEdgeLatchPos(toEdge, offsetX, offsetY);
+            x2 = latchTo.x;
+            y2 = latchTo.y;
+        } else {
+            x2 = e.pageX - offsetX;
+            y2 = e.pageY - offsetY;
+        }
+
+        // let x2 = latchTo.x;
+        // let y2 = latchTo.y
+
+        // let x1 = (fromEdgeRect.right - offsetX);
+        // let y1 = (fromEdgeRect.top - offsetY) +  (fromEdgeRect.height / 2);
+
+        // let x1 = latchFrom.x;
+        // let y1 = latchFrom.y;
+        // let x2 = e.pageX - offsetX;
+        // let y2 = e.pageY - offsetY;
 
         dom.ghostLinkEl.setAttribute('d', 
             FlowUtil.getBezierPath(
@@ -61,10 +82,15 @@ function MXFlowLinkerTool(api: FlowTypes.Api, methods: ReturnType<typeof getPubl
                     dom.ghostLinkEl.classList.remove(FlowTypes.FlowClass.LinkValid);
                     dom.ghostLinkEl.classList.add(FlowTypes.FlowClass.LinkInvalid);
                 }
+
+                applyGhostLinkPosition(e, item);
+                return;
+
             } else {
                 dom.ghostLinkEl.classList.remove(FlowTypes.FlowClass.LinkValid);
                 dom.ghostLinkEl.classList.remove(FlowTypes.FlowClass.LinkInvalid);
             }
+
             applyGhostLinkPosition(e);
         }
     }

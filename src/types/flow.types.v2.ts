@@ -258,6 +258,7 @@ enum FlowClass {
     Node = 'mxflow-node',
     NodeContent = 'mxflow-node-content',
     EdgeGroup = 'mxflow-edge-group',
+    Edge = 'mxflow-edge',
     Lasso = 'mxflow-lasso',
     Links = 'mxlflow-links',
     Link = 'mxflow-link',
@@ -472,6 +473,10 @@ interface Options {
      * content section.
      */
     render?: (item: RenderableItem, content: Element | null | undefined) => Element | string | void,
+    /**
+     * The render method for the context menu. 
+     */
+    renderContext?: (item: FlowItem) => Element | string | void,
     /**
      * Custom link validator. This validator will be called repeatedly when a "linking"
      * operation is occurring and then once before a final link is formed. Don't perform any

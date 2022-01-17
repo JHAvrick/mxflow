@@ -380,7 +380,7 @@ const getPublicInterface = (api: FlowTypes.Api) => {
     }
 
     const openContextMenu = (x: number, y: number, target: FlowTypes.FlowItem, opts?: { suppressEvent: boolean }) => {
-        //render(FlowTypes.RenderableType.Context, target);
+        renderContext(target);
 
         let containerRect = api.dom.containerEl.getBoundingClientRect();
         let offsetY = containerRect.top;
@@ -547,7 +547,16 @@ const getPublicInterface = (api: FlowTypes.Api) => {
     }
 
     const renderContext = (item: FlowTypes.FlowItem) => {
-
+        let renderTarget = dom.contextEl;
+        let nextContent = api.opts.renderContext?.(item);
+        if (nextContent){
+            renderTarget.innerHTML = '';
+            if (typeof nextContent === 'string'){
+                renderTarget.insertAdjacentHTML('afterbegin', nextContent);
+            } else {
+                renderTarget.appendChild(nextContent);
+            }
+        }
     }
 
     const getDom = () => api.dom;

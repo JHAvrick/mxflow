@@ -11,10 +11,32 @@ if (root){
         `
     }
 
+
+    let template = /* HTML */ `
+        <div data-mxflow-node-template>
+            <ul data-mxflow-edge-group="inputs">
+                <!-- Input Edges Dynamically Populated -->
+            </ul>
+            <ul data-mxflow-edge-group="center" data-mxflow-edge-latch="top">
+                <!-- Input Edges Dynamically Populated -->
+            </ul>
+            <div data-mxflow-node-content>
+                <!-- Node Content as Provided by User -->
+            </div>
+            <ul data-mxflow-edge-group="outputs">
+                <!-- Output Edges Dynamically Populated -->
+            </ul>
+        </div>
+    `
+
     let mxflow = MXFlowController(root, {
+        nodeHTMLTemplate: template,
         drag: {
-            gridX: 32,
-            gridY: 32
+            gridX: 16,
+            gridY: 16
+        },
+        renderContext: (item) => {
+            return `<span> ${item.type} </span>`
         },
         render: (item, content) => {
             if (content) return content;
@@ -37,31 +59,9 @@ if (root){
             y: 32 * i,
             edges: [
                 { group: 'inputs', key: 'input' },
-                { group: 'outputs', key: 'output' }
+                { group: 'outputs', key: 'output' },
+                { group: 'center', key: 'misc' }
             ]
         });
     }
-
-    // mxflow.addNode('test');
-    // mxflow.addNode('test2');
-    // mxflow.addNode('test3');
-    // mxflow.addNode('test');
-    // mxflow.addNode('test2');
-    // mxflow.addNode('test3');
-    // mxflow.addNode('test');
-    // mxflow.addNode('test2');
-    // mxflow.addNode('test3');
-    // mxflow.addNode('test');
-    // mxflow.addNode('test2');
-    // mxflow.addNode('test3');
-    // mxflow.addNode('test');
-    // mxflow.addNode('test2');
-    // mxflow.addNode('test3');
-    
-    // mxflow.on('selected', (d) => {
-    //     console.log(d.forEach(item => {
-    //         item.
-    //     }));
-    // })
-
 }

@@ -59,6 +59,7 @@ const buildEdgeGroups = (dom: Document) => {
         groupNodes.forEach(node => {
             let key = node.getAttribute(FlowTypes.FlowAttr.EdgeGroup)!;
             let latchPos = enumFromStringValue(FlowTypes.LinkLatchPosition, node.getAttribute(FlowTypes.FlowAttr.EdgeLatch) ?? 'center');
+            console.log(latchPos);
             node.classList.add(FlowTypes.FlowClass.EdgeGroup);
             edgeGroups.set(key, {
                 groupKey: key,
@@ -131,17 +132,14 @@ const createEdge = (node: FlowTypes.Node, groupKey: string, edgeKey: string) : F
     }
 
     let el = document.createElement('li');
-        el.classList.add('mx-flow-edge');
+        el.classList.add(FlowTypes.FlowClass.Edge);
         el.setAttribute(FlowTypes.FlowAttr.Type, FlowTypes.FlowItemType.Edge);
         el.setAttribute(FlowTypes.FlowAttr.Key, `${node.key}:${edgeKey}`);
         el.setAttribute('draggable', "false");
         el.ondragstart = (e) => e.preventDefault(); 
 
-    // let targetList = type === 'input' ? node.inputsEl : node.outputsEl;
-    //     targetList.appendChild(el);
-
     return {
-        type: FlowTypes.FlowItemType.Edge,
+        type: FlowTypes.FlowItemType.Edge, 
         key: `${node.key}:${edgeKey}`,
         group: group,
         nodeKey: node.key,
@@ -150,33 +148,35 @@ const createEdge = (node: FlowTypes.Node, groupKey: string, edgeKey: string) : F
     }
 }
 
-const getEdgeOffsetCenter = (edge: FlowTypes.Edge) => {
+const getEdgeLatchPos = (edge: FlowTypes.Edge, offsetX: number = 0, offsetY: number = 0) => {
+    let rect = edge.el.getBoundingClientRect();
+    console.log(edge);
     switch (edge.group.latchPos.toString()){
         case 'top': 
             return {
-                x: edge.el.offsetLeft + (edge.el.offsetWidth / 2),
-                y: edge.el.offsetTop
+                x: (rect.left - offsetX) + (rect.width / 2),
+                y: (rect.top - offsetY)
             }
         case 'right':
             return {
-                x: edge.el.offsetLeft,
-                y: edge.el.offsetTop + (edge.el.offsetHeight / 2)
+                x: (rect.left - offsetX),
+                y: (rect.top - offsetY) + (rect.height / 2)
             }
         case 'bottom':
             return {
-                x: edge.el.offsetLeft + (edge.el.offsetWidth / 2),
-                y: edge.el.offsetTop + edge.el.offsetHeight
+                x: (rect.left - offsetX) + (rect.width / 2),
+                y: (rect.top - offsetY) + rect.height
             }
         case 'left':
             return {
-                x: edge.el.offsetLeft + edge.el.offsetWidth,
-                y: edge.el.offsetTop + (edge.el.offsetHeight / 2)
+                x: (rect.left - offsetX) + rect.width,
+                y: (rect.top - offsetY) + (rect.height / 2)
             }
         case 'center': 
         default:
             return {
-                x: edge.el.offsetLeft + (edge.el.offsetWidth / 2),
-                y: edge.el.offsetTop + (edge.el.offsetHeight / 2)
+                x: (rect.left - offsetX) + (rect.width / 2),
+                y: (rect.top - offsetY) + (rect.height / 2)
             }
     }
 }
@@ -379,17 +379,19 @@ const applyLinkPosition = (api: FlowTypes.Api, link: FlowTypes.Link) => {
         throw new Error('MXFlow.applyLinkPosition(): Cannot apply link position for undefined edge');
     }
 
-    let fromEdgeRect = <DOMRect> fromEdge!.el.getBoundingClientRect();
-    let toEdgeRect = <DOMRect> toEdge!.el.getBoundingClientRect();
+    // let fromEdgeRect = <DOMRect> fromEdge!.el.getBoundingClientRect();
+    // let toEdgeRect = <DOMRect> toEdge!.el.getBoundingClientRect();
     
     let containerRect = api.dom.containerEl.getBoundingClientRect();
     let offsetY = containerRect.top;
     let offsetX = containerRect.left;
 
-    let x1 = (fromEdgeRect.right - offsetX);
-    let y1 = (fromEdgeRect.top - offsetY) +  (fromEdgeRect.height / 2);
-    let x2 = (toEdgeRect.left - offsetX) /* + (toEdgeRect.width / 2); */
-    let y2 = (toEdgeRect.top - offsetY) +  (toEdgeRect.height / 2);
+    let latchFrom = getEdgeLatchPos(fromEdge, offsetX, offsetY);
+    let latchTo = getEdgeLatchPos(toEdge, offsetX, offsetY);
+    let x1 = latchFrom.x;
+    let y1 = latchFrom.y;
+    let x2 = latchTo.x;
+    let y2 = latchTo.y
 
     //let centerY = Math.abs((y1 - transform.y) - (y2 - transform.y));
 
@@ -434,7 +436,7 @@ const applyLinkPosition = (api: FlowTypes.Api, link: FlowTypes.Link) => {
     link.outerEl.setAttribute('d', bezier);
     link.innerEl.setAttribute('d', bezier);
     link.labelEl.setAttribute('d', bezier);
-    console.log(link.innerEl.getBBox());
+    //console.log(link.innerEl.getBBox());
     // link.fObject.setAttribute('x', center.x + 'px');
     // link.fObject.setAttribute('Y', center.y + 'px');
     // link.fObject.style.transform = `translate(${center.x}px, ${center.y}px)`;
@@ -451,7 +453,7 @@ export {
     getEdgeCompositeKey,
     getLinkCompositeKey,
     createEdge,
-    getEdgeOffsetCenter,
+    getEdgeLatchPos,
     createLink,
     generateFlowEl,
     addItemClass,
