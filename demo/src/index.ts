@@ -5,25 +5,15 @@ import { RenderableType, FlowItem, Edge } from '../../src/types/flow.types.v2';
 let root = document.getElementById('root');
 if (root){
 
-    const render = (type: RenderableType, item: FlowItem) => {
-        return `
-            <div class="node"> ${type} </div>
-        `
-    }
-
-
     let template = /* HTML */ `
         <div data-mxflow-node-template>
-            <ul data-mxflow-edge-group="inputs">
-                <!-- Input Edges Dynamically Populated -->
-            </ul>
-            <ul data-mxflow-edge-group="center" data-mxflow-edge-latch="top">
+            <ul data-mxflow-edge-group="inputs" data-mxflow-edge-latch="right">
                 <!-- Input Edges Dynamically Populated -->
             </ul>
             <div data-mxflow-node-content>
                 <!-- Node Content as Provided by User -->
             </div>
-            <ul data-mxflow-edge-group="outputs">
+            <ul data-mxflow-edge-group="outputs" data-mxflow-edge-latch="left">
                 <!-- Output Edges Dynamically Populated -->
             </ul>
         </div>
@@ -59,8 +49,7 @@ if (root){
             y: 32 * i,
             edges: [
                 { group: 'inputs', key: 'input' },
-                { group: 'outputs', key: 'output' },
-                { group: 'center', key: 'misc' }
+                { group: 'outputs', key: 'output' }
             ]
         });
     }

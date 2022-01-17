@@ -33,16 +33,13 @@ function MXFlowLinkerTool(api: FlowTypes.Api, methods: ReturnType<typeof getPubl
             y2 = e.pageY - offsetY;
         }
 
-        // let x2 = latchTo.x;
-        // let y2 = latchTo.y
-
-        // let x1 = (fromEdgeRect.right - offsetX);
-        // let y1 = (fromEdgeRect.top - offsetY) +  (fromEdgeRect.height / 2);
-
-        // let x1 = latchFrom.x;
-        // let y1 = latchFrom.y;
-        // let x2 = e.pageX - offsetX;
-        // let y2 = e.pageY - offsetY;
+        /**
+         * Reverse link direction so that it stays uniform regardless of which end it was dragged from
+         */
+        if (x1 > x2){
+            [x1, x2] = FlowUtil.swapValues(x1, x2);
+            [y1, y2] = FlowUtil.swapValues(y1, y2);
+        }
 
         dom.ghostLinkEl.setAttribute('d', 
             FlowUtil.getBezierPath(

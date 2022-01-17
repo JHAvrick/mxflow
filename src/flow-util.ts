@@ -12,6 +12,13 @@ const getBezierPath = (x1: number, y1: number, x2: number, y2: number , weight: 
     return  `M${x1} ${y1} C ${bx2} ${y1} ${bx3} ${y2} ${x2} ${y2}`
 }
 
+const swapValues = (var1: any, var2: any) => {
+    let t = var1;
+    var1 = var2;
+    var2 = t;
+    return [var1, var2];
+}
+
 interface rect {
     left: number,
     right: number,
@@ -150,7 +157,6 @@ const createEdge = (node: FlowTypes.Node, groupKey: string, edgeKey: string) : F
 
 const getEdgeLatchPos = (edge: FlowTypes.Edge, offsetX: number = 0, offsetY: number = 0) => {
     let rect = edge.el.getBoundingClientRect();
-    console.log(edge);
     switch (edge.group.latchPos.toString()){
         case 'top': 
             return {
@@ -393,6 +399,11 @@ const applyLinkPosition = (api: FlowTypes.Api, link: FlowTypes.Link) => {
     let x2 = latchTo.x;
     let y2 = latchTo.y
 
+    if (x1 > x2){
+        [x1, x2] = swapValues(x1, x2);
+        [y1, y2] = swapValues(y1, y2);
+    }
+
     //let centerY = Math.abs((y1 - transform.y) - (y2 - transform.y));
 
     
@@ -447,6 +458,7 @@ const applyAllLinkPositions = (api: FlowTypes.Api) =>{
 }
 
 export {
+    swapValues,
     getBezierPath,
     intersectRect,
     createNode,
