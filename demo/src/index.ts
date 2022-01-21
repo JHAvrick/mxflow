@@ -21,10 +21,10 @@ if (root){
 
     let mxflow = MXFlowController(root, {
         nodeHTMLTemplate: template,
-        drag: {
-            gridX: 16,
-            gridY: 16
-        },
+        // drag: {
+        //     gridX: 16,
+        //     gridY: 16
+        // },
         renderContext: (item) => {
             return `<span> ${item.type} </span>`
         },
@@ -38,18 +38,32 @@ if (root){
                         return `<div class="edge-content output-edge"></div>`;
                     }
                 case 'node':
-                    return `<div class="node-content"> ${item.key} </div>`;
+                    let c = document.createElement('div');
+                        c.classList.add('node-content');
+
+                    let input = document.createElement('input');
+                        input.classList.add('form-control', 'form-control-sm')
+                        
+                    c.insertAdjacentElement('afterbegin', input);
+
+                    return c; //`<div class="node-content"> ${item.key} </div>`;
             }
         }
     });
 
-    for (let i = 0; i < 25; i++){
+    for (let i = 0; i < 5; i++){
         mxflow.addNode('node' + i, { 
             x: 32 * i,
             y: 32 * i,
             edges: [
                 { group: 'inputs', key: 'input' },
-                { group: 'outputs', key: 'output' }
+                { group: 'inputs', key: 'input1' },
+                { group: 'inputs', key: 'input2' },
+                { group: 'inputs', key: 'input3' },
+                { group: 'outputs', key: 'output1' },
+                { group: 'outputs', key: 'output2' },
+                { group: 'outputs', key: 'output3' },
+                { group: 'outputs', key: 'output4' }
             ]
         });
     }

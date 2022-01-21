@@ -110,6 +110,11 @@ interface Node {
     type: FlowItemType.Node,
     key: string,
     /**
+     * The template used to generate this node. This value is autopopulated based on the global
+     * `nodeHTMLTemplate` option, but can be specified individually when creating a node.
+     */
+    template: string,
+    /**
      * The outer node element
      */
     el: HTMLElement,
@@ -126,12 +131,13 @@ interface Node {
      */
     x: number,
     y: number,
+    z: number,
     /**
      * The node's offset position during a drag operation. Always zero unless
      * actively dragging.
      */
     deltaX: number,
-    deltaY: number
+    deltaY: number,
 }
 
 type AddNodeOptions = {

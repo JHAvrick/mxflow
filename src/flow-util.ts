@@ -66,7 +66,6 @@ const buildEdgeGroups = (dom: Document) => {
         groupNodes.forEach(node => {
             let key = node.getAttribute(FlowTypes.FlowAttr.EdgeGroup)!;
             let latchPos = enumFromStringValue(FlowTypes.LinkLatchPosition, node.getAttribute(FlowTypes.FlowAttr.EdgeLatch) ?? 'center');
-            console.log(latchPos);
             node.classList.add(FlowTypes.FlowClass.EdgeGroup);
             edgeGroups.set(key, {
                 groupKey: key,
@@ -78,7 +77,9 @@ const buildEdgeGroups = (dom: Document) => {
     return edgeGroups;
 }
 
-const createNode = (key: string, x: number, y: number, template: string = DefaultNodeTemplate) : FlowTypes.Node => {
+
+
+const createNode = (key: string, x: number, y: number, z: number, template: string = DefaultNodeTemplate) : FlowTypes.Node => {
     let dom = new DOMParser().parseFromString(template, "text/html");
 
     //Get and create node
@@ -108,6 +109,7 @@ const createNode = (key: string, x: number, y: number, template: string = Defaul
         el.style.position = 'absolute';
         el.style.left = "0px";
         el.style.top = "0px";
+        el.style.zIndex = z.toString();
     } else {
         throw new Error('No parent HTMLElement found in Node template (w/ class "mx-flow-node").');
     }
@@ -117,12 +119,14 @@ const createNode = (key: string, x: number, y: number, template: string = Defaul
 
     return {
         type: FlowTypes.FlowItemType.Node,
+        template: template,
         key: key,
         el: el,
         contentEl: content,
         edgeGroups: buildEdgeGroups(dom),
         x: x,
         y: y,
+        z: z,
         deltaX: 0,
         deltaY: 0,
     }

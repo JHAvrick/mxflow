@@ -59,37 +59,33 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         return state.selected.has(key);
     }
 
-    const setSelected = (selected: FlowTypes.SelectableItem[] | Map<string, FlowTypes.SelectableItem>, opts?: { isPreselect?: boolean } & FlowTypes.ActionExtendedOpts) => {
+    const setSelected = (selected: FlowTypes.SelectableItem[] | Map<string, FlowTypes.SelectableItem>, opts?: FlowTypes.ActionExtendedOpts) => {
         let s = Array.isArray(selected) ? new Map(selected.map(item => [item.key, item])) : selected;
         if (state.selected.size !== 0 || s.size !== 0) {
             FlowUtil.removeItemClass(state.selected, FlowTypes.FlowClass.ItemSelected);
             state.selected = s;
             FlowUtil.addItemClass(state.selected, FlowTypes.FlowClass.ItemSelected);
+
+            //If we didn't just select everything, enforce layers
+            if (s.size !== 0 && state.selected.size < state.nodes.size){
+                bringToTop(<FlowTypes.Node[]> Array.from(selected.values()).filter(item => item.type === 'node'));
+            }
         }
 
         if (!opts?.suppressEvent) emit('selected', new Map(state.preselected));
         if (!opts?.ignoreAction) recordAction('select');
     }
 
-    const setPreselected = (preselected: FlowTypes.SelectableItem[] | Map<string, FlowTypes.SelectableItem>, opts?: Pick<FlowTypes.ActionExtendedOpts, 'suppressEvent'>) => {
-        let s = Array.isArray(preselected) ? new Map(preselected.map(item => [item.key, item])) : preselected;
-        if (state.preselected.size !== 0 || s.size !== 0) {
-            FlowUtil.removeItemClass(state.preselected, FlowTypes.FlowClass.ItemPreselected);
-            state.preselected = s;
-            FlowUtil.addItemClass(state.preselected, FlowTypes.FlowClass.ItemPreselected);
-        }
-
-        if (!opts?.suppressEvent) emit('preselected', new Map(state.preselected));
-    }
-
     /**
      * Add one or more items to the current selection.
      */
-    const addToSelection = (items: FlowTypes.SelectableItem[], opts?: FlowTypes.ActionExtendedOpts) => {
+     const addToSelection = (items: FlowTypes.SelectableItem[], opts?: FlowTypes.ActionExtendedOpts) => {
         items.forEach(item => {
             state.selected.set(item.key, item);
             FlowUtil.addItemClass(item, FlowTypes.FlowClass.ItemSelected);
         });
+
+        bringToTop(<FlowTypes.Node[]> Array.from(items.values()).filter(item => item.type === 'node'));
 
         if (!opts?.suppressEvent) emit('selected', new Map(state.selected));
         if (!opts?.ignoreAction) recordAction('select');
@@ -109,6 +105,46 @@ const getPublicInterface = (api: FlowTypes.Api) => {
 
         if (!opts?.suppressEvent) emit('selected', new Map(state.selected));
         if (!opts?.ignoreAction) recordAction('select');
+    }
+
+    const bringToTop = (nodes: FlowTypes.Node[]) => {
+        let toTop = nodes.sort((a, b) => (a.z > b.z) ? 1 : -1); //Sort given nodes
+        let toTopSet = new Set(toTop); 
+        let all = Array.from(state.nodes.values()).sort((a, b) => (a.z > b.z) ? 1 : -1); //Sort all nodes
+        
+        /**
+         * Take any node NOT in the given node set and move all thier indexes down.
+         * For some nodes, the index may move down by more than 1.
+         */
+        let lastZ = api.opts.zIndexStart!; //Our counter
+        all.forEach(node => {
+            if (!toTopSet.has(node)){
+                node.z = lastZ;
+                node.el.style.zIndex = node.z.toString();
+                lastZ = lastZ + 1;
+            }
+        })
+
+        /**
+         * Relayer our given node set to the top of the list, but maintain the
+         * previous z-indexes within the list (this is already done by sorting)
+         */
+        let toTopBaseZ = lastZ + toTop.length;
+        toTop.forEach((node, i) => {
+            node.z = toTopBaseZ + i;
+            node.el.style.zIndex = node.z.toString();
+        })
+    }   
+
+    const setPreselected = (preselected: FlowTypes.SelectableItem[] | Map<string, FlowTypes.SelectableItem>, opts?: Pick<FlowTypes.ActionExtendedOpts, 'suppressEvent'>) => {
+        let s = Array.isArray(preselected) ? new Map(preselected.map(item => [item.key, item])) : preselected;
+        if (state.preselected.size !== 0 || s.size !== 0) {
+            FlowUtil.removeItemClass(state.preselected, FlowTypes.FlowClass.ItemPreselected);
+            state.preselected = s;
+            FlowUtil.addItemClass(state.preselected, FlowTypes.FlowClass.ItemPreselected);
+        }
+
+        if (!opts?.suppressEvent) emit('preselected', new Map(state.preselected));
     }
 
     const removeItem = (type: FlowTypes.FlowItemType, key: string, opts?: FlowTypes.ActionExtendedOpts) => {
@@ -240,7 +276,8 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         let opts = { ...AddNodeDefaultOpts, ...options }
         if (!state.nodes.has(nodeKey)){
             //Create the node 
-            let node = FlowUtil.createNode(nodeKey, opts.x || 0, opts.y || 0, api.opts.nodeHTMLTemplate);
+
+            let node = FlowUtil.createNode(nodeKey, opts.x || 0, opts.y || 0, state.nodes.size + 1, api.opts.nodeHTMLTemplate);
             state.nodes.set(nodeKey, node);
 
             //Create edges
@@ -248,6 +285,7 @@ const getPublicInterface = (api: FlowTypes.Api) => {
                 addEdge(config.group, nodeKey, config.key, { suppressEvent: true, ignoreAction: true })
             })
 
+            
             render(node);
 
             //Add node and bind position
