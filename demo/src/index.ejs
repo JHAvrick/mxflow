@@ -15,6 +15,15 @@
         body {
             margin: 0;
             padding: 0;
+            height: 100%;
+        }
+
+        body {
+            height: 2000px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
         }
 
         .node-content {
@@ -54,6 +63,16 @@
             margin-bottom: 10px;
         }
 
+        .mxflow-edge--invalid .input-edge,
+        .mxflow-edge--invalid .output-edge {
+            background: red;
+        }
+
+        .mxflow-edge--valid .input-edge,
+        .mxflow-edge--valid .output-edge {
+            background: green;
+        }
+
         ul[data-mxflow-edge-group="center"] {
             position: absolute;
             left: 50%;
@@ -63,7 +82,11 @@
     </style>
 </head>
 <body>
-    <div id="root" style="width:100vw; height:100vh; overflow:hidden;">
+    <div id="root" style="width:90vw; height:90vh; overflow:hidden; border: 2px solid black; border-radius:3px; margin-bottom: 100px;">
+
+    </div>
+
+    <div id="root2" style="width:90vw; height:90vh; overflow:hidden; border: 2px solid black; border-radius:3px;">
 
     </div>
 </body>

@@ -10,14 +10,18 @@ function MXFlowLinkerTool(api: FlowTypes.Api, methods: ReturnType<typeof getPubl
     const dom = api.dom;
     let active = false;
     let fromEdge: FlowTypes.Edge | null = null;
+    let lastEdge: FlowTypes.Edge | null;
 
     const applyGhostLinkPosition = (e: PointerEvent, toEdge?: FlowTypes.Edge) => {
         let transform = state.transform;
         let containerRect = dom.containerEl.getBoundingClientRect();
         //let fromEdgeRect = <DOMRect> fromEdge!.el.getBoundingClientRect();
 
+        // let offsetX = api.dom.containerEl.offsetLeft; //containerRect.top;
+        // let offsetY = api.dom.containerEl.offsetTop;//containerRect.left;
         let offsetY = containerRect.top;
         let offsetX = containerRect.left;
+        console.log(offsetX, offsetY);
 
         let latchFrom = FlowUtil.getEdgeLatchPos(fromEdge!, offsetX, offsetY);
         let x1 = latchFrom.x;
@@ -29,8 +33,11 @@ function MXFlowLinkerTool(api: FlowTypes.Api, methods: ReturnType<typeof getPubl
             x2 = latchTo.x;
             y2 = latchTo.y;
         } else {
-            x2 = e.pageX - offsetX;
-            y2 = e.pageY - offsetY;
+            //[x2, y2] = methods.pageToGraphPos(e.pageX, e.pageY);
+            // x2 = e.pageX - offsetX;
+            // y2 = e.pageY - offsetY;
+            x2 = e.pageX - api.dom.containerEl.offsetLeft;
+            y2 = e.pageY - api.dom.containerEl.offsetTop;
         }
 
         /**
@@ -52,6 +59,10 @@ function MXFlowLinkerTool(api: FlowTypes.Api, methods: ReturnType<typeof getPubl
         )
     }
 
+    const clean = () => {
+
+    }
+
     const onDown = (e: PointerEvent, item?: FlowTypes.FlowItem) => {
         if (!item || item.type !== 'edge') return;
         if (e.button !== api.opts.select?.button) return;
@@ -71,13 +82,18 @@ function MXFlowLinkerTool(api: FlowTypes.Api, methods: ReturnType<typeof getPubl
         if (active){
             let item = methods.resolveItem(e);
             if (item && item.type === 'edge'){
+                lastEdge = item;
                 let isValid = methods.isLinkValid(fromEdge!, item);
                 if (isValid){
                     dom.ghostLinkEl.classList.remove(FlowTypes.FlowClass.LinkInvalid);
                     dom.ghostLinkEl.classList.add(FlowTypes.FlowClass.LinkValid);
+                    item.el.classList.remove(FlowTypes.FlowClass.EdgeInvalid);
+                    item.el.classList.add(FlowTypes.FlowClass.EdgeValid);
                 } else {
                     dom.ghostLinkEl.classList.remove(FlowTypes.FlowClass.LinkValid);
                     dom.ghostLinkEl.classList.add(FlowTypes.FlowClass.LinkInvalid);
+                    item.el.classList.remove(FlowTypes.FlowClass.EdgeValid);
+                    item.el.classList.add(FlowTypes.FlowClass.EdgeInvalid);
                 }
 
                 applyGhostLinkPosition(e, item);
@@ -86,6 +102,11 @@ function MXFlowLinkerTool(api: FlowTypes.Api, methods: ReturnType<typeof getPubl
             } else {
                 dom.ghostLinkEl.classList.remove(FlowTypes.FlowClass.LinkValid);
                 dom.ghostLinkEl.classList.remove(FlowTypes.FlowClass.LinkInvalid);
+                if (lastEdge){
+                    lastEdge.el.classList.remove(FlowTypes.FlowClass.EdgeValid);
+                    lastEdge.el.classList.remove(FlowTypes.FlowClass.EdgeInvalid);
+                    lastEdge = null;
+                }
             }
 
             applyGhostLinkPosition(e);
@@ -117,6 +138,11 @@ function MXFlowLinkerTool(api: FlowTypes.Api, methods: ReturnType<typeof getPubl
     const endLinking = () => {
         active = false;
         dom.ghostLinkEl.style.display = "none";
+        if (lastEdge){
+            lastEdge.el.classList.remove(FlowTypes.FlowClass.EdgeValid);
+            lastEdge.el.classList.remove(FlowTypes.FlowClass.EdgeInvalid);
+            lastEdge = null;
+        }
         api.unlock();
     }
 

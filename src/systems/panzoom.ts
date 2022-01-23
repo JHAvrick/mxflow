@@ -51,8 +51,10 @@ function MXFlowPanZoomTool(api: FlowTypes.Api, methods: ReturnType<typeof getPub
     const handleWheel = (e: WheelEvent) => {
         if (active || api.isLocked()) return;
 
-        let delta = Math.max(-1, Math.min(1, -e.deltaY));
+        e.preventDefault();
+        //e.stopPropagation();
 
+        let delta = Math.max(-1, Math.min(1, -e.deltaY));
         let scalePageX = e.pageX - dom.containerEl.offsetLeft;
         let scalePageY = e.pageY - dom.containerEl.offsetTop;
         let translateX = -((scalePageX - transform.x) / transform.scale);

@@ -6,6 +6,7 @@ interface Rect {
 }
 
 interface FlowDom {
+    instanceId: string,
     containerEl: HTMLDivElement
     lassoEl: HTMLDivElement
     contextEl: HTMLDivElement
@@ -265,6 +266,8 @@ enum FlowClass {
     NodeContent = 'mxflow-node-content',
     EdgeGroup = 'mxflow-edge-group',
     Edge = 'mxflow-edge',
+    EdgeValid = 'mxflow-edge--valid',
+    EdgeInvalid = 'mxflow-edge--invalid',
     Lasso = 'mxflow-lasso',
     Links = 'mxlflow-links',
     Link = 'mxflow-link',
@@ -386,6 +389,10 @@ interface UndoOptions {
     actions?: ActionType[]
 }
 
+interface LassoOptions {
+    enabled: boolean,
+}
+
 /**
  * Options for the `panzoom` system
  */
@@ -472,6 +479,10 @@ interface Options {
      * Options for the "panzoom" tool.
      */
     panzoom?: PanZoomOptions,
+    /**
+     * Options for the "lasso" tool.
+     */
+    lasso?: LassoOptions,
     /**
      * The render method. When using VanillaJS, this is the method from which the
      * user can insert their HTML content into each node and edge. The user must keep
@@ -581,6 +592,39 @@ interface ActionExtendedOpts {
     ignoreAction?: boolean
 }
 
+type ZoomByStepOpts = {
+    smooth?: boolean,
+    steps: number
+} & ActionExtendedOpts
+
+type ZoomToScaleOpts = {
+    smooth?: boolean,
+    scale: number
+} & ActionExtendedOpts
+
+
+type InteractionEvent = {
+    type: keyof InteractionEventMap,
+    item: FlowItem | undefined,
+    graphX: number,
+    graphY: number,
+    containerX: number,
+    containerY: number,
+    pageX: number,
+    pageY: number,
+    event: Event
+}
+
+interface InteractionEventMap {
+    'contextmenu': InteractionEvent,
+    'down': InteractionEvent,
+    'up': InteractionEvent,
+    'move': InteractionEvent,
+    'keydown': InteractionEvent,
+    'keyup': InteractionEvent,
+    'wheel': InteractionEvent
+}
+
 export {
     Action,
     ActionExtendedOpts,
@@ -619,5 +663,9 @@ export {
     SelectOptions,
     Transform,
     TransformModel,
-    RenderableItem
+    RenderableItem,
+    ZoomByStepOpts,
+    ZoomToScaleOpts,
+    InteractionEvent,
+    InteractionEventMap
 }

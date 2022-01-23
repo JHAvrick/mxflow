@@ -14,8 +14,22 @@ const getPublicInterface = (api: FlowTypes.Api) => {
     //const opts = api.opts;
     const dom = api.dom;
     const state = api.state;
+    const transform = api.state.transform;
     const emit = api.emit;
     
+    // const panzoom = {
+    //     //active: false,
+    //     rootWidth: dom.rootEl.getBoundingClientRect().width,
+    //     rootHeight: dom.rootEl.getBoundingClientRect().height,
+    //     deltaX: 0,
+    //     deltaY: 0,
+    //     panStartX: 0,
+    //     panStartY: 0,
+    //     maxDeltaBottom: 0,
+    //     maxDeltaRight: 0,
+    //     lastMoveEvent: PointerEvent | null = null;
+    // }
+
     const recordAction = (action: FlowTypes.ActionType) => {
         if (!api.opts.undo?.enabled) return;
         if (api.opts.undo?.actions?.includes(action)){
@@ -134,6 +148,9 @@ const getPublicInterface = (api: FlowTypes.Api) => {
             node.z = toTopBaseZ + i;
             node.el.style.zIndex = node.z.toString();
         })
+
+        //TODO:
+        //api.dom.lassoEl.style.zIndex = (toTop[toTop.length - 1].z + 1).toString();
     }   
 
     const setPreselected = (preselected: FlowTypes.SelectableItem[] | Map<string, FlowTypes.SelectableItem>, opts?: Pick<FlowTypes.ActionExtendedOpts, 'suppressEvent'>) => {
@@ -191,6 +208,11 @@ const getPublicInterface = (api: FlowTypes.Api) => {
     const resolveItem = (e: PointerEvent | MouseEvent) => {
         let item: FlowTypes.FlowItem | undefined;
         if (e.target && e.target instanceof Element){
+            let closestGraph = e.target.closest(`#${dom.instanceId}`);
+            if (!closestGraph){
+                return;
+            }
+            
             let closestItem = e.target.closest(`[${FlowTypes.FlowAttr.Type}]`);
             if (closestItem){
                 closestItem.getAttribute
@@ -409,23 +431,21 @@ const getPublicInterface = (api: FlowTypes.Api) => {
     }
 
     const isLinkValid = (fromEdge: FlowTypes.Edge, toEdge: FlowTypes.Edge) => {
-        if (fromEdge.nodeKey === toEdge.nodeKey) return false; //Check if edges are on same node
-        if (fromEdge.group.groupKey === toEdge.group.groupKey) return false; //Check if type matches
-        if (state.links.has(`${fromEdge.nodeKey}:${fromEdge.edgeKey}:${toEdge.nodeKey}:${toEdge.edgeKey}`)) return false; //Check if link already exists
-        if (state.links.has(`${toEdge.nodeKey}:${toEdge.edgeKey}:${fromEdge.nodeKey}:${fromEdge.edgeKey}`)) return false;
-        if (api.opts.linkValidator && !api.opts.linkValidator(fromEdge, toEdge)) return false; //User validation
-        return true;
+        if (fromEdge && toEdge){
+            if (fromEdge.nodeKey === toEdge.nodeKey) return false; //Check if edges are on same node
+            if (fromEdge.group.groupKey === toEdge.group.groupKey) return false; //Check if type matches
+            if (state.links.has(`${fromEdge.nodeKey}:${fromEdge.edgeKey}:${toEdge.nodeKey}:${toEdge.edgeKey}`)) return false; //Check if link already exists
+            if (state.links.has(`${toEdge.nodeKey}:${toEdge.edgeKey}:${fromEdge.nodeKey}:${fromEdge.edgeKey}`)) return false;
+            if (api.opts.linkValidator && !api.opts.linkValidator(fromEdge, toEdge)) return false; //User validation
+            return true;
+        }
+        return false;
     }
 
-    const openContextMenu = (x: number, y: number, target: FlowTypes.FlowItem, opts?: { suppressEvent: boolean }) => {
+    const openContextMenu = (graphX: number, graphY: number, target: FlowTypes.FlowItem, opts?: { suppressEvent: boolean }) => {
         renderContext(target);
-
-        let containerRect = api.dom.containerEl.getBoundingClientRect();
-        let offsetY = containerRect.top;
-        let offsetX = containerRect.left;
-
-        dom.contextEl.style.left = `${x - offsetX}px`;
-        dom.contextEl.style.top = `${y - offsetY}px`;
+        dom.contextEl.style.left = `${graphX}px`;
+        dom.contextEl.style.top = `${graphY}px`;
         dom.contextEl.style.display = 'block';
         state.contextOpen = true;
         if (!opts?.suppressEvent){
@@ -597,6 +617,148 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         }
     }
 
+    const applyTransform = (transition: boolean | number = false) => {
+        if (typeof transition === 'number' || transition === true){
+            dom.rootEl.style.transition = `transform ${typeof transition === 'number' ? transition : 300}ms`;
+        }
+        dom.rootEl.style.transform = `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`;
+    }
+
+    type SetViewOptions = {
+        x?: number,
+        y?: number,
+        scale?: number,
+        scaleSteps?: number,
+        transition?: boolean | number
+    } & FlowTypes.ActionExtendedOpts;
+
+    /**
+     * 
+     * @param graphX
+     * @param graphY 
+     * @returns 
+     */
+    const getOffsetPos = (graphX: number, graphY: number) => {
+        let x = (graphX - dom.containerEl.offsetLeft);
+        let y = (graphY - dom.containerEl.offsetTop);
+        return [x, y];
+    }
+
+   /**
+     * Converts a set of coordinates on the page to a position within the graph, factoring graph offset.
+     * 
+     * @param pageX - The page x position
+     * @param pageY - The page y position
+     */
+    const pageToGraphPos = (pageX: number, pageY: number) => {
+        let x = (Math.abs(transform.x) + (pageX - dom.containerEl.offsetLeft)) / transform.scale;
+        let y = (Math.abs(transform.y) + (pageY - dom.containerEl.offsetTop)) / transform.scale;
+        return [x, y];
+    }
+
+    /**
+     * Translate or zoom to any coordinates within the graph.
+     * 
+     * @param {Object} opts - Options object
+     * @param {number} opts.x - New x coordinate
+     * @param {number} opts.y - New y coordinate
+     * @param {number} opts.scale - Provide a new scale between the configured min/max. Must be a positive number. Overrides the `scaleSteps` option.
+     * @param {number} opts.scaleStep - Alternative zoom method. Provide the number of steps (positive or negative) to zoom. The
+     * size of the step is determined by the `panzoom.scaleStep` configuration property.
+     * @param {number | boolean} opts.transition - Pass `false` to use no smooth transition, `true` to use the default transition `300ms`, or a custom
+     * transition time in milliseconds.
+     * @returns 
+     */
+    const setView = (opts: SetViewOptions) => {
+        if (api.isLocked()) return; //Ignore setView if our control is locked
+
+        let rootRect = dom.rootEl.getBoundingClientRect();
+        let width = rootRect.width;
+        let height = rootRect.height;
+        let transformX = transform.x;
+        let trasnformY = transform.y;
+        let scale = transform.scale;
+        let minScale = api.opts.panzoom?.minScale || .05;
+        let maxScale = api.opts.panzoom?.maxScale || 2;
+        let stepIncrement = api.opts.panzoom?.scaleStep || .25;
+        let scalePageX = opts.x ?? transform.x; //- dom.containerEl.offsetLeft;
+        let scalePageY = opts.y ?? transform.y; //- dom.containerEl.offsetTop;
+
+        /**
+         * Not sure why but it seems unecessary to calculate a translateX here as done in panzoom.
+         */
+        let translateX = -((scalePageX - transformX) / scale); 
+        let translateY = -((scalePageY - trasnformY) / scale);
+
+        /**
+         * Get our next scale either by the given explicit scale or by scale step.
+         * If both are provided, the explicit scale is used.
+         */
+        let nextScale: number = transform.scale;
+        if (opts.scale){
+            nextScale = opts.scale;
+        } else if (opts.scaleSteps) {
+            nextScale = parseFloat((scale + (opts.scaleSteps * stepIncrement)).toFixed(2));
+        }
+
+        //if (nextScale < minScale || nextScale > maxScale) return;
+        if (nextScale < minScale || nextScale > maxScale) nextScale = transform.scale;
+
+        /**
+         * Get x and y accounting for new scale
+         */
+        let nextX = translateX * nextScale;
+        let nextY = translateY * nextScale;
+
+        /**
+         * Use our next scale to calculate what the max x (left) and y (top) position will be.
+         */ 
+        let containerRect = dom.containerEl.getBoundingClientRect();
+        let maxX = (width * nextScale - containerRect.width);
+        let maxY = (height * nextScale - containerRect.height);
+
+        /**
+         * Enforce max x/y positions. 
+         */ 
+        if (nextX > 0) nextX = 0;
+        if (nextY > 0) nextY = 0;
+        if (nextX < -maxX) nextX = -maxX;
+        if (nextY < -maxY) nextY = -maxY;
+
+        /**
+         * Update our values and apply
+         */ 
+        api.state.transform.scale = nextScale;
+        api.state.transform.x = nextX;
+        api.state.transform.y = nextY;
+
+        applyTransform(opts.transition ?? true);
+
+        if (!opts.suppressEvent) emit('transform', { ...transform });
+        // if (!opts.ignoreAction) recordAction('zoom');
+
+        //TODO: transform action here?
+    }
+
+    const focus = (node: FlowTypes.Node) => {
+        let containerRect = dom.containerEl.getBoundingClientRect();
+        let nodeRect = node.el.getBoundingClientRect();
+
+        
+
+        let nextX = node.x// + dom.containerEl.offsetLeft;
+        let nextY = node.y// + dom.containerEl.offsetTop;
+
+        console.log(node.x, node.y);
+
+        setView({ x: nextX, y: nextY });
+
+        //transform.x = -(node.x - dom.containerEl.offsetLeft); //-(node.x + (containerRect.width / 2) + (nodeRect.width / 2));
+        //transform.y = -(node.y;//-(node.y + (containerRect.height / 2) + (nodeRect.height / 2));
+
+        applyTransform();
+    }
+
     const getDom = () => api.dom;
     const getNodes = () => new Map(state.nodes);
     const getEdges = () => new Map(state.edges);
@@ -632,7 +794,11 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         getDom,
         getNodes,
         getEdges,
-        getLinks
+        getLinks,
+        getOffsetPos,
+        pageToGraphPos,
+        setView,
+        focus
     }
 }
 

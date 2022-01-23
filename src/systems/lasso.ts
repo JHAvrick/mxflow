@@ -36,27 +36,19 @@ function MXFlowLassoTool(api: FlowTypes.Api, methods: ReturnType<typeof getPubli
         if (active){
             let preselected = new Map<string, FlowTypes.SelectableItem>();
 
-            let left = startX < e.pageX ? startX : e.pageX;
-            let top = startY < e.pageY ? startY : e.pageY;
-            let width = startX < e.pageX ? e.pageX - startX : startX - e.pageX;
-            let height = startY < e.pageY ? e.pageY - startY : startY - e.pageY;
-    
-            let containerRect = api.dom.containerEl.getBoundingClientRect();
-            let offsetY = containerRect.top;
-            let offsetX = containerRect.left;
+            let width = Math.max(e.pageX - startX, startX - e.pageX);
+            let height = Math.max(e.pageY - startY, startY - e.pageY);
+            let left, top; [left, top] = methods.getOffsetPos(
+                Math.min(startX, e.pageX),  
+                Math.min(startY, e.pageY)
+            );
 
-            dom.lassoEl.style.left = (left - offsetX) + 'px';
-            dom.lassoEl.style.top = (top - offsetY) + 'px';
+            dom.lassoEl.style.left = left + 'px';
+            dom.lassoEl.style.top = top + 'px';
             dom.lassoEl.style.width = width + 'px';
             dom.lassoEl.style.height = height + 'px';
     
-            let lassoRect = {
-                left: left,
-                top: top,
-                bottom: top + height,
-                right: left + width
-            }
-            
+            let lassoRect = dom.lassoEl.getBoundingClientRect(); 
             state.nodes.forEach(node => {
                 let nodeRect = node.el.getBoundingClientRect();
                 if (FlowUtil.intersectRect(nodeRect, lassoRect)){

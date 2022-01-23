@@ -1,4 +1,5 @@
 import * as FlowTypes from 'types/flow.types.v2';
+import { nanoid } from 'nanoid';
 
 /**
  * Generates a curved SVG bezier path. The severity of the curve is controlled by the weight parameter.
@@ -268,11 +269,12 @@ const createLink = (opts: FlowTypes.CreateLinkParams) : FlowTypes.Link => {
 
 const generateFlowEl = (targetEl: HTMLElement, opts: FlowTypes.Options) => {
 
+    let id = 'mxflow-instance-' + nanoid();
     let gridSize = opts.gridSize || 32;
     let gridMacroSize = gridSize * 10;
 
     targetEl.insertAdjacentHTML('afterbegin', /* HTML */ `
-        <div class="${FlowTypes.FlowClass.Container}"
+        <div id="${id}" class="${FlowTypes.FlowClass.Container}"
             tabindex="1" 
             style="position:relative; display:block; width:100%; height:100%; overflow:hidden; pointer-events:auto; padding:0px; outline:none"
             ondragstart="event.preventDefault()">
@@ -326,6 +328,7 @@ const generateFlowEl = (targetEl: HTMLElement, opts: FlowTypes.Options) => {
     console.log(FlowTypes.FlowClass.Container)
 
     return {
+        instanceId: id,
         containerEl: <HTMLDivElement> targetEl.querySelector("." + FlowTypes.FlowClass.Container)!,
         lassoEl: <HTMLDivElement> targetEl.querySelector("." + FlowTypes.FlowClass.Lasso)!,
         contextEl: <HTMLDivElement> targetEl.querySelector("." + FlowTypes.FlowClass.Context)!,
