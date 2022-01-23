@@ -38,7 +38,7 @@ function MXFlowLassoTool(api: FlowTypes.Api, methods: ReturnType<typeof getPubli
 
             let width = Math.max(e.pageX - startX, startX - e.pageX);
             let height = Math.max(e.pageY - startY, startY - e.pageY);
-            let left, top; [left, top] = methods.getOffsetPos(
+            let left, top; [left, top] = methods.pageToContainerPos(
                 Math.min(startX, e.pageX),  
                 Math.min(startY, e.pageY)
             );

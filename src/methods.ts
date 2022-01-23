@@ -10,12 +10,16 @@ const AddNodeDefaultOpts : FlowTypes.AddNodeOptions = {
     edges: []
 }
 
+const dom = '';
+
 const getPublicInterface = (api: FlowTypes.Api) => {
     //const opts = api.opts;
     const dom = api.dom;
     const state = api.state;
     const transform = api.state.transform;
     const emit = api.emit;
+
+    console.log( "meth9ods", api.dom.instanceId);
     
     // const panzoom = {
     //     //active: false,
@@ -205,13 +209,14 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         return item;
     }
 
+    const eventInGraph = (e: PointerEvent | MouseEvent) => {
+        return (<Element> e.target)?.closest?.(`#${dom.instanceId}`) != null;
+    }
+
     const resolveItem = (e: PointerEvent | MouseEvent) => {
         let item: FlowTypes.FlowItem | undefined;
         if (e.target && e.target instanceof Element){
-            let closestGraph = e.target.closest(`#${dom.instanceId}`);
-            if (!closestGraph){
-                return;
-            }
+            if (!eventInGraph(e)) return;
             
             let closestItem = e.target.closest(`[${FlowTypes.FlowAttr.Type}]`);
             if (closestItem){
@@ -239,12 +244,14 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         throw new Error(`MXFlow: Attempted to set edge content on edge which doesn't exist (key="${`${nodeKey}:${edgeKey}`}")`);
     }
 
-    const addEdge = (group: string, nodeKey: string, edgeKey: string, opts?: FlowTypes.ActionExtendedOpts) : FlowTypes.Edge => {
+    const addEdge = (group: string, nodeKey: string, edgeKey: string, opts?: FlowTypes.AddEdgeOptions) : FlowTypes.Edge => {
         let key = `${nodeKey}:${edgeKey}`;
         if (!state.edges.has(key)){
             let node = state.nodes.get(nodeKey);
             if (node){
                 let edge = FlowUtil.createEdge(node, group, edgeKey);
+                    edge.data = opts?.data || {};
+
                 state.edges.set(key, edge);
 
                 //if (content) setEdgeContent(nodeKey, edgeKey, content);
@@ -300,6 +307,8 @@ const getPublicInterface = (api: FlowTypes.Api) => {
             //Create the node 
 
             let node = FlowUtil.createNode(nodeKey, opts.x || 0, opts.y || 0, state.nodes.size + 1, api.opts.nodeHTMLTemplate);
+                node.data = opts.data || {};
+
             state.nodes.set(nodeKey, node);
 
             //Create edges
@@ -367,7 +376,7 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         throw new Error(`MXFlow: No node exists with key="${key}"`);
     }
 
-    const addLink = (fromNode: string, fromEdge: string, toNode: string, toEdge: string, opts?: FlowTypes.ActionExtendedOpts) => {
+    const addLink = (fromNode: string, fromEdge: string, toNode: string, toEdge: string, opts?: FlowTypes.AddLinkOptions) => {
         let params = { fromNode, fromEdge, toNode, toEdge };
         let from = state.edges.get(`${fromNode}:${fromEdge}`);
         let to = state.edges.get(`${toNode}:${toEdge}`);
@@ -387,6 +396,8 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         let key = FlowUtil.getLinkCompositeKey(params);
         if (!state.links.has(key)){
             let link = FlowUtil.createLink(params);
+                link.data = opts?.data || {};
+
             state.links.set(key, link);
             dom.linkContainerEl.appendChild(link.el);
             FlowUtil.applyLinkPosition(api, link);
@@ -489,7 +500,8 @@ const getPublicInterface = (api: FlowTypes.Api) => {
             model.nodes[node.key] = {
                 selected: state.selected.has(node.key),
                 x: node.x,
-                y: node.y
+                y: node.y,
+                data: node.data
             }
         })
 
@@ -497,7 +509,8 @@ const getPublicInterface = (api: FlowTypes.Api) => {
             model.edges[edge.key] = {
                 nodeKey: edge.nodeKey,
                 edgeKey: edge.edgeKey,
-                groupKey: edge.group.groupKey
+                groupKey: edge.group.groupKey,
+                data: edge.data
             }
         })
 
@@ -507,7 +520,8 @@ const getPublicInterface = (api: FlowTypes.Api) => {
                 fromNode: link.fromNode,
                 fromEdge: link.fromEdge,
                 toNode: link.toNode,
-                toEdge: link.toEdge
+                toEdge: link.toEdge,
+                data: link.data
             }
         })
 
@@ -567,13 +581,29 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         })
     }
     
-    //If complete, clear existing content
-    
-    const render = (item: FlowTypes.RenderableItem) => {
+    /**
+     * Call render on all existing renderable items.
+     * 
+     * @param data - Optional data object w/ any properties to expose to your render function.
+     */
+    const renderAll = (data: { [key:string]: any } = {}) => {
+        let items : FlowTypes.RenderableItem[] = Array.from(state.nodes.values());
+            items.concat(Array.from(state.edges.values()));
+            items.forEach(item => render(item, data));
+    }
+
+    /**
+     * Call render for a particular item.
+     * 
+     * @param item - A renderable item. Current renderable items are items of type 'node' or 'edge'.
+     * @param data - Optional data object w/ any properties to expose to your render function.
+     * @returns 
+     */
+    const render = (item: FlowTypes.RenderableItem, data: { [key:string]: any } = {}) => {
         if (api.opts.render){
             let cachedContent = api.renderCache.get(item.key); //Get any cached content for the item w/ the given key
             let renderTarget: HTMLElement | null = null, 
-            nextContent = api.opts.render(item, cachedContent);
+            nextContent = api.opts.render(item, cachedContent, data);
 
             if (item.type === FlowTypes.FlowItemType.Node){
                 renderTarget = item.contentEl;
@@ -604,6 +634,10 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         }
     }
 
+    /**
+     * 
+     * @param item 
+     */
     const renderContext = (item: FlowTypes.FlowItem) => {
         let renderTarget = dom.contextEl;
         let nextContent = api.opts.renderContext?.(item);
@@ -633,19 +667,20 @@ const getPublicInterface = (api: FlowTypes.Api) => {
     } & FlowTypes.ActionExtendedOpts;
 
     /**
+     * Resolves a set of page coordinates to a position within the graph container.
      * 
      * @param graphX
      * @param graphY 
      * @returns 
      */
-    const getOffsetPos = (graphX: number, graphY: number) => {
+    const pageToContainerPos = (graphX: number, graphY: number) => {
         let x = (graphX - dom.containerEl.offsetLeft);
         let y = (graphY - dom.containerEl.offsetTop);
         return [x, y];
     }
 
    /**
-     * Converts a set of coordinates on the page to a position within the graph, factoring graph offset.
+     * Resolves a set of page coordinates to a position within the graph.
      * 
      * @param pageX - The page x position
      * @param pageY - The page y position
@@ -673,22 +708,12 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         if (api.isLocked()) return; //Ignore setView if our control is locked
 
         let rootRect = dom.rootEl.getBoundingClientRect();
-        let width = rootRect.width;
-        let height = rootRect.height;
-        let transformX = transform.x;
-        let trasnformY = transform.y;
         let scale = transform.scale;
         let minScale = api.opts.panzoom?.minScale || .05;
         let maxScale = api.opts.panzoom?.maxScale || 2;
         let stepIncrement = api.opts.panzoom?.scaleStep || .25;
-        let scalePageX = opts.x ?? transform.x; //- dom.containerEl.offsetLeft;
-        let scalePageY = opts.y ?? transform.y; //- dom.containerEl.offsetTop;
-
-        /**
-         * Not sure why but it seems unecessary to calculate a translateX here as done in panzoom.
-         */
-        let translateX = -((scalePageX - transformX) / scale); 
-        let translateY = -((scalePageY - trasnformY) / scale);
+        let scalePageX = opts.x ?? transform.x; //Get param coordinates or use current transform values
+        let scalePageY = opts.y ?? transform.y; 
 
         /**
          * Get our next scale either by the given explicit scale or by scale step.
@@ -707,15 +732,15 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         /**
          * Get x and y accounting for new scale
          */
-        let nextX = translateX * nextScale;
-        let nextY = translateY * nextScale;
+        let nextX = -scalePageX * nextScale; //Apply new scale to coordinates
+        let nextY = -scalePageY * nextScale;
 
         /**
          * Use our next scale to calculate what the max x (left) and y (top) position will be.
          */ 
         let containerRect = dom.containerEl.getBoundingClientRect();
-        let maxX = (width * nextScale - containerRect.width);
-        let maxY = (height * nextScale - containerRect.height);
+        let maxX = rootRect.width - containerRect.width;
+        let maxY = rootRect.height - containerRect.height;
 
         /**
          * Enforce max x/y positions. 
@@ -740,23 +765,18 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         //TODO: transform action here?
     }
 
-    const focus = (node: FlowTypes.Node) => {
+    const focus = (node: FlowTypes.Node, scale?: number) => {
         let containerRect = dom.containerEl.getBoundingClientRect();
         let nodeRect = node.el.getBoundingClientRect();
-
-        
-
-        let nextX = node.x// + dom.containerEl.offsetLeft;
-        let nextY = node.y// + dom.containerEl.offsetTop;
-
-        console.log(node.x, node.y);
-
-        setView({ x: nextX, y: nextY });
-
-        //transform.x = -(node.x - dom.containerEl.offsetLeft); //-(node.x + (containerRect.width / 2) + (nodeRect.width / 2));
-        //transform.y = -(node.y;//-(node.y + (containerRect.height / 2) + (nodeRect.height / 2));
-
-        applyTransform();
+        let x1 = node.x;
+        let y1 = node.y;
+        let w1 = nodeRect.width / transform.scale;
+        let h1 = nodeRect.height / transform.scale;
+        let w2 = containerRect.width / transform.scale;
+        let h2 = containerRect.height / transform.scale;
+        let x2 = x1 + ((w1 - w2) / 2);
+        let y2 = y1 + ((h1 - h2) / 2);
+        setView({ x: x2, y: y2, scale: scale ?? transform.scale });
     }
 
     const getDom = () => api.dom;
@@ -795,10 +815,13 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         getNodes,
         getEdges,
         getLinks,
-        getOffsetPos,
+        eventInGraph,
+        pageToContainerPos,
         pageToGraphPos,
         setView,
-        focus
+        focus,
+        render,
+        renderAll
     }
 }
 

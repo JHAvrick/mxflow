@@ -1,5 +1,4 @@
 import * as FlowTypes from 'types/flow.types.v2';
-import * as FlowUtil from '../flow-util';
 import { getPublicInterface } from '../methods';
 
 /**

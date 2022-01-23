@@ -9,7 +9,7 @@ function MXFlowContextTool(api: FlowTypes.Api, methods: ReturnType<typeof getPub
         if (item){
             e.preventDefault();
             e.stopPropagation();
-            let x, y; [x,y] = methods.getOffsetPos(e.pageX, e.pageY);
+            let x, y; [x,y] = methods.pageToContainerPos(e.pageX, e.pageY);
             methods.openContextMenu(x, y, item);
         }
     }

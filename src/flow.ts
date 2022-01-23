@@ -92,76 +92,10 @@ const DefaultOpts: FlowTypes.Options = {
     }
 }
 
-const EventToInteractionMap : { [key:string]: keyof FlowTypes.InteractionEventMap  } = <const> {
-    'pointerdown': 'down',
-    'pointerup': 'up',
-    'wheel': 'wheel'
-}
-
-function MXFlowInteractions(api: FlowTypes.Api, methods: ReturnType<typeof getPublicInterface>){
-    const dom = api.dom;
-    const events = new EventEmitter();
-
-    const emit = <K extends keyof FlowTypes.InteractionEventMap>(type: K, event?: FlowTypes.InteractionEventMap[K]) => {
-        events.emit(type, event);
-    }
-
-    const resolveCoordinates = (e: PointerEvent | MouseEvent | WheelEvent) => {
-        let graphX, graphY; [graphX, graphY] = methods.pageToGraphPos(e.pageX, e.pageY);
-        let containerX, containerY; [containerX, containerY] = methods.getOffsetPos(e.pageX, e.pageY);
-        return {
-            graphX,
-            graphY,
-            containerX,
-            containerY,
-            pageX: e.pageX,
-            pageY: e.pageY
-        }
-    }
-
-    const handleEvent = (e: Event) => {
-        let type = EventToInteractionMap[e.type]!;
-        if (e instanceof PointerEvent || e instanceof MouseEvent || e instanceof WheelEvent){
-            let coords = resolveCoordinates(e);
-            let evt : FlowTypes.InteractionEvent = {
-                item: methods.resolveItem(e),
-                event: e,
-                type: type,
-                ...coords
-            }
-            emit(type, evt);
-        }
-    }
-
-    dom.containerEl.addEventListener('contextmenu', handleEvent);
-    document.addEventListener('pointerdown', handleEvent);
-    document.addEventListener('pointerup', handleEvent);
-    document.addEventListener('keydown', handleEvent);
-    document.addEventListener('keyup', handleEvent);
-    document.addEventListener('pointermove', handleEvent);
-    const dispose = () => {
-        dom.containerEl.removeEventListener('contextmenu', handleEvent);
-        document.removeEventListener('pointerdown', handleEvent);
-        document.removeEventListener('pointerup', handleEvent);
-        document.removeEventListener('keydown', handleEvent);
-        document.removeEventListener('keyup', handleEvent);
-        document.removeEventListener('pointermove', handleEvent);
-    }
-
-    return {
-        dispose,
-        on<K extends keyof FlowTypes.InteractionEventMap>(type: K, listener: (event: FlowTypes.InteractionEventMap[K]) => any){
-            events.on(type, listener);
-        },
-        removeListener<K extends keyof FlowTypes.FlowEventMap>(type: K, listener: Listener){
-            events.removeListener(type, listener);
-        }
-    }
-}
-
-
 function MXFlowController(targetEl: HTMLElement, options: FlowTypes.Options){
-    let opts = merge(DefaultOpts, options);
+    console.log(options);
+    let opts = merge({}, DefaultOpts, options);
+    console.log(opts);
     const dom = FlowUtil.generateFlowEl(targetEl, opts);
     const state = getMXFlowState(dom);
     const events = new EventEmitter();
@@ -186,13 +120,6 @@ function MXFlowController(targetEl: HTMLElement, options: FlowTypes.Options){
     //API and methods, passed to tool instances.
     const api: FlowTypes.Api = <const> { tools, opts, dom, state, emit, lock, unlock, isLocked, renderCache };
     const methods = getPublicInterface(api);
-    const interactions = MXFlowInteractions(api, methods);
-
-
-    interactions.on('down', (e) => {
-        console.log(e);
-    })
-
 
     //Event handlers
     const handleDown = (e: PointerEvent) => {
@@ -256,7 +183,7 @@ function MXFlowController(targetEl: HTMLElement, options: FlowTypes.Options){
     };
 
     const setOptions = (options: FlowTypes.Options) => {
-        opts = merge(DefaultOpts, options);
+        opts = merge({}, DefaultOpts, options);
         api.opts = opts;
         tools.forEach(tool => tool.onUpdate?.(api));
     }

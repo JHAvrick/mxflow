@@ -63,13 +63,15 @@ interface TransformModel {
 interface NodeModel {
     selected: boolean,
     x: number,
-    y: number
+    y: number,
+    data: Serializable
 }
 
 interface EdgeModel {
     nodeKey: string,
     edgeKey: string,
-    groupKey: string
+    groupKey: string,
+    data: Serializable
 }
 
 interface LinkModel {
@@ -77,24 +79,23 @@ interface LinkModel {
     fromNode: string,
     fromEdge: string,
     toNode: string,
-    toEdge: string
+    toEdge: string,
+    data: Serializable
 }
 
 interface Model {
     transform: TransformModel,
-    nodes: {
-        [key:string]: NodeModel
-    },
-    edges: {
-        [key: string]: EdgeModel
-    },
-    links: {
-        [key:string]: LinkModel
-    }
+    nodes: { [key:string]: NodeModel },
+    edges: { [key: string]: EdgeModel },
+    links: { [key:string]: LinkModel }
 }
 
 type ContentModelItem = NodeModel | EdgeModel; //Model items whose actual items have content sections
 
+
+interface Serializable {
+    [key:string]: string | number | boolean | null | undefined | Serializable;
+}
 
 /**
  * ------------------------------------------------------------------------------------------------------
@@ -139,12 +140,17 @@ interface Node {
      */
     deltaX: number,
     deltaY: number,
+    /**
+     * Container for any user-attached data for this node
+     */
+    data: Serializable
 }
 
 type AddNodeOptions = {
     x?: number,
     y?: number,
-    edges?: { group: string, key: string }[]
+    edges?: { group: string, key: string }[],
+    data?: Serializable
 } & ActionExtendedOpts;
 
 /**
@@ -170,8 +176,13 @@ interface Edge {
     key: string, //The composite key
     nodeKey: string,
     edgeKey: string,
-    el: HTMLElement
+    el: HTMLElement,
+    data: Serializable
 }
+
+type AddEdgeOptions = {
+    data?: Serializable
+} & ActionExtendedOpts;
 
 interface Link {
     type: FlowItemType.Link,
@@ -183,10 +194,15 @@ interface Link {
     el: SVGGElement,
     innerEl: SVGPathElement,
     outerEl: SVGPathElement,
-    labelEl: SVGTextPathElement
+    labelEl: SVGTextPathElement,
+    data: Serializable
     // fObject: SVGForeignObjectElement,
     // content: HTMLElement
 }
+
+type AddLinkOptions = {
+    data?: Serializable
+} & ActionExtendedOpts;
 
 interface GhostLink {
     el: SVGElement,
@@ -294,8 +310,7 @@ interface Transform {
  */
 type ActionType = typeof ActionTypes[keyof typeof ActionTypes];
 const ActionTypes = <const> {
-    PAN: 'pan',
-    ZOOM: 'zoom',
+    TRANSFORM: 'transform',
     SELECT: 'select',
     DRAG: 'drag',
     ADD_EDGE: 'addEdge',
@@ -489,7 +504,7 @@ interface Options {
      * track of HTML content externally as many operations will destroy an items's 
      * content section.
      */
-    render?: (item: RenderableItem, content: Element | null | undefined) => Element | string | void,
+    render?: (item: RenderableItem, content: Element | null | undefined, data: { [key:string]: any }) => Element | string | void,
     /**
      * The render method for the context menu. 
      */
@@ -632,6 +647,8 @@ export {
     ActionType,
     ActionTypes,
     AddNodeOptions,
+    AddEdgeOptions,
+    AddLinkOptions,
     Api,
     ContentModelItem,
     CreateLinkParams,
@@ -667,5 +684,6 @@ export {
     ZoomByStepOpts,
     ZoomToScaleOpts,
     InteractionEvent,
-    InteractionEventMap
+    InteractionEventMap,
+    Serializable
 }

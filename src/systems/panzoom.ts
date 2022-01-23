@@ -103,7 +103,7 @@ function MXFlowPanZoomTool(api: FlowTypes.Api, methods: ReturnType<typeof getPub
 
         applyTransform(true);
         api.emit('transform', { ...transform });
-        methods.recordAction('zoom');
+        methods.recordAction('transform');
     }
 
     const onDown = (e: PointerEvent) => {
@@ -162,7 +162,7 @@ function MXFlowPanZoomTool(api: FlowTypes.Api, methods: ReturnType<typeof getPub
         document.removeEventListener("pointermove", handleMove);
         state.transform = transform;
         api.emit('transform', {...transform});
-        methods.recordAction('pan');
+        methods.recordAction('transform');
         api.unlock();
     }
 

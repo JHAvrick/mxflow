@@ -130,6 +130,7 @@ const createNode = (key: string, x: number, y: number, z: number, template: stri
         z: z,
         deltaX: 0,
         deltaY: 0,
+        data: {}
     }
 }
 
@@ -156,7 +157,8 @@ const createEdge = (node: FlowTypes.Node, groupKey: string, edgeKey: string) : F
         group: group,
         nodeKey: node.key,
         edgeKey: edgeKey,
-        el: el
+        el: el,
+        data: {}
     }
 }
 
@@ -261,7 +263,8 @@ const createLink = (opts: FlowTypes.CreateLinkParams) : FlowTypes.Link => {
         el: group,
         innerEl: inner,
         outerEl: outer,
-        labelEl: labelPath
+        labelEl: labelPath,
+        data: {}
         // fObject: fObject,
         // content: content
     }

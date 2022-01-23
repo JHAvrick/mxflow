@@ -19,6 +19,7 @@ if (root){
         </div>
     `
 
+    var lastCondensed = false, condensed = false;
     let mxflow = MXFlowController(root, {
         nodeHTMLTemplate: template,
         // drag: {
@@ -28,8 +29,8 @@ if (root){
         renderContext: (item) => {
             return `<span> ${item.type} </span>`
         },
-        render: (item, content) => {
-            if (content) return content;
+        render: (item, content, data) => {
+            if (data.condensed === undefined && content) return content;
             switch (item.type){
                 case 'edge':
                     if (item.group.groupKey === 'inputs'){
@@ -40,9 +41,16 @@ if (root){
                 case 'node':
                     let c = document.createElement('div');
                         c.classList.add('node-content');
+                        
 
                     let input = document.createElement('input');
-                        input.classList.add('form-control', 'form-control-sm')
+                        input.classList.add('form-control', 'form-control-sm');
+
+                    if (data.condensed){
+                        c.style.minHeight = '100px';
+                    } else {
+                        c.style.minHeight = '200px';
+                    }
                         
                     c.insertAdjacentElement('afterbegin', input);
 
@@ -51,10 +59,10 @@ if (root){
         }
     });
 
-    for (let i = 0; i < 5; i++){
+    for (let i = 0; i < 1; i++){
         mxflow.addNode('node' + i, { 
             x: 1000 + (32 * i),
-            y: 1000 + (32 * i),
+            y: 2000 + (32 * i),
             edges: [
                 { group: 'inputs', key: 'input' },
                 { group: 'inputs', key: 'input1' },
@@ -68,6 +76,15 @@ if (root){
         });
     }
 
+
+    mxflow.on('transform', (e) => {
+        condensed = e.scale <= .5;
+        if (condensed !== lastCondensed){
+            mxflow.renderAll({ condensed: condensed });
+        }
+        lastCondensed = condensed;
+    })
+
     // let nodeCount = 100;
     // root.addEventListener('mousedown', e => {
     //     let x,y; [x,y] = mxflow.pageToGraphPos(e.pageX, e.pageY);
@@ -79,9 +96,12 @@ if (root){
     // })
 
     setTimeout(() => {
-        //mxflow.setView({x: 320, y: 320, scale: 1.5});
         mxflow.focus(mxflow.getNodes().get('node0')!);
-    }, 500)
+        // mxflow.setView({x: 320, y: 320, scale: 1.5, transition: false });
+        // setTimeout(() => {
+            
+        // }, 500)
+    }, 2000)
 }
 
 
@@ -95,18 +115,18 @@ if (root){
 let root2 = document.getElementById('root2');
 if (root2){
     let template = /* HTML */ `
-    <div data-mxflow-node-template>
-        <ul data-mxflow-edge-group="inputs" data-mxflow-edge-latch="right">
-            <!-- Input Edges Dynamically Populated -->
-        </ul>
-        <div data-mxflow-node-content>
-            <!-- Node Content as Provided by User -->
+        <div data-mxflow-node-template>
+            <ul data-mxflow-edge-group="inputs" data-mxflow-edge-latch="right">
+                <!-- Input Edges Dynamically Populated -->
+            </ul>
+            <div data-mxflow-node-content>
+                <!-- Node Content as Provided by User -->
+            </div>
+            <ul data-mxflow-edge-group="outputs" data-mxflow-edge-latch="left">
+                <!-- Output Edges Dynamically Populated -->
+            </ul>
         </div>
-        <ul data-mxflow-edge-group="outputs" data-mxflow-edge-latch="left">
-            <!-- Output Edges Dynamically Populated -->
-        </ul>
-    </div>
-`
+    `
 
     let mxflow = MXFlowController(root2, {
         nodeHTMLTemplate: template,
@@ -118,6 +138,7 @@ if (root2){
             return `<span> ${item.type} </span>`
         },
         render: (item, content) => {
+            console.log('RENDRE 2');
             if (content) return content;
             switch (item.type){
                 case 'edge':
