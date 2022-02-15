@@ -1,7 +1,14 @@
+/*
+.mx-flow-container {
+     width: 100%;
+     height: 100%;
+}
+*/
+
 /**
  * Styles applied to the top-level node container.
  */
-.mxflow-node {
+ .mxflow-node {
     display: flex;
     justify-content: space-between;
     align-items: stretch;
@@ -105,9 +112,10 @@
 }
 
 .mxflow-link-inner {
+    stroke: #b1b1b7;
+    stroke-width: 1;
     stroke: gray;
     opacity: 1;
-    stroke-width: 2px;
     z-index: 1000;
     transition: stroke 100ms;
     fill: none;

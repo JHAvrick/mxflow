@@ -14,8 +14,7 @@ const babelOptions = {
             "useBuiltIns": "usage",
             "corejs": 3,
             "targets": "> 1%, not dead"
-        }],
-        "vue"
+        }]
     ]
 };
 

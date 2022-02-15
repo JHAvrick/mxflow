@@ -1,15 +1,15 @@
 import * as FlowTypes from 'types/flow.types.v2';
-import * as FlowUtil from './flow-util';
+import { generateFlowEl, flatten, resolveProperty, assignProperty }  from './flow-util';
 import { EventEmitter, Listener } from 'util/event-emitter';
 import { getPublicInterface } from './methods';
-import { merge } from 'lodash';
 import MXFlowSelectTool from './systems/select';
 import MXFlowDragTool from './systems/drag';
 import MXFlowLassoTool from './systems/lasso';
-import MXFlowPanZoomTool from './systems//panzoom';
+import MXFlowPanZoomTool from './systems/panzoom';
 import MXFlowLinkerTool from './systems/linker';
 import MXFlowContextTool from './systems/context';
 import MXFlowShortcutTool from './systems/shortcut';
+import InteractionEmitter from './interact';
 
 const getMXFlowState = (dom: FlowTypes.FlowDom) : FlowTypes.FlowState => {
     return {
@@ -24,7 +24,6 @@ const getMXFlowState = (dom: FlowTypes.FlowDom) : FlowTypes.FlowState => {
         preselected: new Map<string, FlowTypes.SelectableItem>(),
         selected: new Map<string, FlowTypes.SelectableItem>(),
         contextOpen: false,
-        multi: false,
         undo: [],
         redo: [],
         transform: {
@@ -36,6 +35,8 @@ const getMXFlowState = (dom: FlowTypes.FlowDom) : FlowTypes.FlowState => {
 }
 
 const DefaultOpts: FlowTypes.Options = {
+    width: 5000,
+    height: 5000,
     zIndexStart: 100,
     showGrid: true,
     gridSize: 32,
@@ -47,6 +48,11 @@ const DefaultOpts: FlowTypes.Options = {
     beforeLinkRemoved: () => true,
     renderContext: () => {},
     render: () => {},
+    background: {
+        type: 'dots',
+        size: 32,
+        html: ''
+    },
     drag: {
         cancelSelector: '',
         handleSelector: '',
@@ -55,9 +61,7 @@ const DefaultOpts: FlowTypes.Options = {
         latchThreshold: 5
     },
     select: {
-        button: 0,
-        allowMultiselect: true,
-        multiSelectKey: 'Shift'
+        multiSelectEnabled: true
     },
     undo: {
         enabled: true,
@@ -79,24 +83,41 @@ const DefaultOpts: FlowTypes.Options = {
         enabled: true
     },
     panzoom: {
+        enabled: true,
         minScale: 0.5,
         maxScale: 2,
         scaleStep: .25,
         scale: 1,
         x: 0,
-        y: 0,
-        panCursor: "grab",
-        controls: {
-            panButton: 1
-        }
+        y: 0
+    },
+    controls: {
+        panButton: 0,
+        panModifier: false,
+        panOnWheel: false,
+        zoomOnWheelModifier: false,
+        zoomOnWheel: true,
+        zoomOnPinch: true,
+        zoomOnDoubleClick: false,
+        selectButton: 0,
+        multiSelectModifier: 'Shift',
+        lassoModifier: 'Control',
+        lassoButton: 0
     }
 }
 
+const mergeDefaultOpts = (opts: FlowTypes.Options) : FlowTypes.Config => {
+    let merged = {};
+    let defaultFlat = flatten(DefaultOpts);
+    for (let key in defaultFlat){
+        assignProperty(key, merged, resolveProperty(key, opts) ?? resolveProperty(key, DefaultOpts))
+    }
+    return <FlowTypes.Config> merged;
+}
+
 function MXFlowController(targetEl: HTMLElement, options: FlowTypes.Options){
-    console.log(options);
-    let opts = merge({}, DefaultOpts, options);
-    console.log(opts);
-    const dom = FlowUtil.generateFlowEl(targetEl, opts);
+    let opts = mergeDefaultOpts(options); //merge({}, DefaultOpts, options);
+    const dom = generateFlowEl(targetEl, opts);
     const state = getMXFlowState(dom);
     const events = new EventEmitter();
     const tools = new Map<string, FlowTypes.ActionHandler>();
@@ -109,7 +130,7 @@ function MXFlowController(targetEl: HTMLElement, options: FlowTypes.Options){
 
     //Methods to lock or unlock a specific tool. These are passed to tool instances only.
     let toolLock: FlowTypes.ActionHandler | false = false;
-    const isLocked = () => toolLock !== false;
+    const isLocked = (exceptTool?: string) => toolLock !== false && toolLock.name !== exceptTool;
     const unlock = () => toolLock = false;
     const lock = (toolName: string) => {
         if (!toolLock && tools.has(toolName)){
@@ -120,104 +141,38 @@ function MXFlowController(targetEl: HTMLElement, options: FlowTypes.Options){
     //API and methods, passed to tool instances.
     const api: FlowTypes.Api = <const> { tools, opts, dom, state, emit, lock, unlock, isLocked, renderCache };
     const methods = getPublicInterface(api);
+    const interactions = InteractionEmitter(api, methods);
 
-    //Event handlers
-    const handleDown = (e: PointerEvent) => {
-
-        // if (e.target instanceof HTMLElement){
-        //     console.log(e.target.closest(`*[${FlowTypes.FlowAttr.Type}="graph"]`));
-        // }
-
-        if (!e.isPrimary) return; //Ignore non-primary pointer events (for now)
-        let item = methods.resolveItem(e); 
-        if (item){
-            if (toolLock){
-                toolLock.onDown?.(e, item!);
-            }
-            tools.forEach(tool => tool.onDown?.(e, item!));
-        }
-    }
-
-    const handleUp = (e: PointerEvent) => {
-        if (!e.isPrimary) return; //Ignore non-primary pointer events (for now)
-        let item = methods.resolveItem(e); 
-        if (toolLock){
-            toolLock.onUp?.(e, item!);
-        }
-        tools.forEach(tool => tool.onUp?.(e, item));
-    }
-
-    const handleContextMenu = (e: MouseEvent) => {
-        let item = methods.resolveItem(e); 
-        if (item){
-            if (toolLock){
-                toolLock.onContextMenu?.(e, item!);
-                return;
-            }
-            tools.forEach(tool => tool.onContextMenu?.(e, item!));
-        }
-    }
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-        if (toolLock){
-            toolLock.onKeyUp?.(e)
-            return;
-        }
-        tools.forEach(tool => tool.onKeyUp?.(e));
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-        if (toolLock){
-            toolLock.onKeyDown?.(e)
-            return;
-        }
-        tools.forEach(tool => tool.onKeyDown?.(e));
-    };
-
-    const handleMove = (e: PointerEvent) => {
-        if (toolLock){
-            toolLock.onMove?.(e)
-            return;
-        }
-        tools.forEach(tool => tool.onMove?.(e))
-    };
-
+    /**
+     * Creates new option set and notifies all subsystems to update state
+     * @param options 
+     */
     const setOptions = (options: FlowTypes.Options) => {
-        opts = merge({}, DefaultOpts, options);
+        opts = mergeDefaultOpts(options); //merge({}, DefaultOpts, options);
         api.opts = opts;
-        tools.forEach(tool => tool.onUpdate?.(api));
+        tools.forEach(tool => tool.update?.(api));
     }
 
     /**
-     * Cancels any active operation (linking, dragging, etc.)
+     * Notifies all subsystems to cancel active operation (linking, dragging, etc.)
      */
     const cancel = () => {
-        tools.forEach(tool => tool.onCancel?.());
+        tools.forEach(tool => tool.cancel?.());
     }
 
     //Add tools
-    tools.set('panzoom', MXFlowPanZoomTool(api, methods));
-    tools.set('select', MXFlowSelectTool(api, methods));
-    tools.set('drag', MXFlowDragTool(api, methods));
-    tools.set('linker', MXFlowLinkerTool(api, methods));
-    tools.set('context', MXFlowContextTool(api, methods));
+    tools.set('select', MXFlowSelectTool(api, methods, interactions));
+    if (api.opts.lasso?.enabled) tools.set('lasso', MXFlowLassoTool(api, methods, interactions));
+    if (api.opts.panzoom?.enabled) tools.set('panzoom', MXFlowPanZoomTool(api, methods, interactions));
+    tools.set('drag', MXFlowDragTool(api, methods, interactions));
+    tools.set('linker', MXFlowLinkerTool(api, methods, interactions));
+    tools.set('context', MXFlowContextTool(api, methods, interactions));
     tools.set('shortcut', MXFlowShortcutTool(api, methods));
-    if (api.opts.lasso?.enabled) tools.set('lasso', MXFlowLassoTool(api, methods));
+    
 
-    //Bind events
-    dom.containerEl.addEventListener('contextmenu', handleContextMenu);
-    document.addEventListener('pointerdown', handleDown);
-    document.addEventListener('pointerup', handleUp);
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('keyup', handleKeyUp);
-    document.addEventListener('pointermove', handleMove);
     const dispose = () => {
-        dom.containerEl.removeEventListener('contextmenu', handleContextMenu);
-        document.removeEventListener('pointerdown', handleDown);
-        document.removeEventListener('pointerup', handleUp);
-        document.removeEventListener('keydown', handleKeyDown);
-        document.removeEventListener('keyup', handleKeyUp);
         tools.forEach(tool => tool.dispose?.());
+        interactions.dispose();
         renderCache.clear();
     }
 

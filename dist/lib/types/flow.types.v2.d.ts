@@ -1,3 +1,8 @@
+import { MXFlowControllerInstance } from "../flow";
+import { getPublicInterface } from '../methods';
+declare type NoOptionals<T> = {
+    [P in keyof T]-?: T[P];
+};
 interface Rect {
     left: number;
     right: number;
@@ -5,6 +10,7 @@ interface Rect {
     bottom: number;
 }
 interface FlowDom {
+    instanceId: string;
     containerEl: HTMLDivElement;
     lassoEl: HTMLDivElement;
     contextEl: HTMLDivElement;
@@ -57,11 +63,15 @@ interface NodeModel {
     selected: boolean;
     x: number;
     y: number;
+    width: number | string;
+    height: number | string;
+    data: Serializable;
 }
 interface EdgeModel {
     nodeKey: string;
     edgeKey: string;
     groupKey: string;
+    data: Serializable;
 }
 interface LinkModel {
     selected: boolean;
@@ -69,6 +79,7 @@ interface LinkModel {
     fromEdge: string;
     toNode: string;
     toEdge: string;
+    data: Serializable;
 }
 interface Model {
     transform: TransformModel;
@@ -83,33 +94,71 @@ interface Model {
     };
 }
 declare type ContentModelItem = NodeModel | EdgeModel;
+interface Serializable {
+    [key: string]: string | number | boolean | null | undefined | Serializable;
+}
 /**
  * ------------------------------------------------------------------------------------------------------
  * Drag Controller Types
  * ------------------------------------------------------------------------------------------------------
  */
 interface Graph {
+    key: 'graph';
     type: FlowItemType.Graph;
     el: HTMLElement;
 }
 interface Node {
     type: FlowItemType.Node;
     key: string;
-    nodeEl: HTMLElement;
+    /**
+     * The template used to generate this node. This value is autopopulated based on the global
+     * `nodeHTMLTemplate` option, but can be specified individually when creating a node.
+     */
+    template: string;
+    /**
+     * The outer node element
+     */
+    el: HTMLElement;
+    /**
+     * The container for rendered content
+     */
     contentEl: HTMLElement;
+    /**
+     * Map of edge groups generated after tempalte parsing
+     */
     edgeGroups: Map<string, EdgeGroup>;
+    /**
+     * The node's current position and size
+     */
     x: number;
     y: number;
+    z: number;
+    width: number | string;
+    height: number | string;
+    /**
+     * The node's offset position during a drag operation. Always zero unless
+     * actively dragging.
+     */
     deltaX: number;
     deltaY: number;
+    /**
+     * Container for any user-attached data for this node
+     */
+    data: Serializable;
 }
 declare type AddNodeOptions = {
-    x?: number;
-    y?: number;
+    class?: string;
+    data?: Serializable;
+    width?: string | number;
+    height?: string | number;
     edges?: {
         group: string;
         key: string;
+        data?: Serializable;
+        class?: string;
     }[];
+    x?: number;
+    y?: number;
 } & ActionExtendedOpts;
 /**
  * Posssible positions for link to latch to edge
@@ -133,7 +182,12 @@ interface Edge {
     nodeKey: string;
     edgeKey: string;
     el: HTMLElement;
+    data: Serializable;
 }
+declare type AddEdgeOptions = {
+    data?: Serializable;
+    class?: string;
+} & ActionExtendedOpts;
 interface Link {
     type: FlowItemType.Link;
     key: string;
@@ -141,13 +195,18 @@ interface Link {
     fromEdge: string;
     toNode: string;
     toEdge: string;
-    groupEl: SVGGElement;
+    el: SVGGElement;
     innerEl: SVGPathElement;
     outerEl: SVGPathElement;
     labelEl: SVGTextPathElement;
+    data: Serializable;
 }
+declare type AddLinkOptions = {
+    class?: string;
+    data?: Serializable;
+} & ActionExtendedOpts;
 interface GhostLink {
-    groupEl: SVGElement;
+    el: SVGElement;
     pathEl: SVGElement;
 }
 interface LinkState {
@@ -176,14 +235,8 @@ declare type ContextTargetItem = Graph | Node | Edge | Link;
 /**
  * Item types which have a renderable content section
  */
-declare enum RenderableType {
-    Node = "node",
-    Edge = "edge",
-    Context = "context"
-}
-/**
- * Graph entity types
- */
+declare type RenderableType = 'node' | 'edge';
+declare type RenderableItem = Node | Edge;
 declare enum FlowItemType {
     None = "none",
     Graph = "graph",
@@ -205,20 +258,27 @@ declare enum FlowAttr {
 declare enum FlowClass {
     Container = "mxflow-container",
     Root = "mxflow-root",
+    Background = "mxflow-background",
+    Dots = "mxflow-dots",
     Grid = "mxflow-grid",
     GridInner = "mxflow-grid-inner",
     GridOuter = "mxflow-grid-outer",
     Context = "mxflow-context",
+    ItemSelected = "mxflow-item--selected",
+    ItemPreselected = "mxflow-item--preselected",
     Nodes = "mxflow-nodes",
     Node = "mxflow-node",
     NodeContent = "mxflow-node-content",
     EdgeGroup = "mxflow-edge-group",
+    Edge = "mxflow-edge",
+    EdgeValid = "mxflow-edge--valid",
+    EdgeInvalid = "mxflow-edge--invalid",
     Lasso = "mxflow-lasso",
     Links = "mxlflow-links",
     Link = "mxflow-link",
     LinkInner = "mxflow-link-inner",
     LinkOuter = "mxflow-link-outer",
-    LinkValid = "mxflow-link--active",
+    LinkValid = "mxflow-link--valid",
     LinkInvalid = "mxflow-link--invalid",
     GhostLinks = "mxflow-ghost-links",
     GhostLink = "mxflow-ghost-link"
@@ -237,8 +297,7 @@ interface Transform {
  */
 declare type ActionType = typeof ActionTypes[keyof typeof ActionTypes];
 declare const ActionTypes: {
-    readonly PAN: "pan";
-    readonly ZOOM: "zoom";
+    readonly TRANSFORM: "transform";
     readonly SELECT: "select";
     readonly DRAG: "drag";
     readonly ADD_EDGE: "addEdge";
@@ -327,10 +386,14 @@ interface UndoOptions {
      */
     actions?: ActionType[];
 }
+interface LassoOptions {
+    enabled: boolean;
+}
 /**
  * Options for the `panzoom` system
  */
 interface PanZoomOptions {
+    enabled?: boolean;
     /**
      * The initial x position of the viewport
      */
@@ -369,14 +432,46 @@ interface PanZoomOptions {
         panButton?: number;
     };
 }
+interface BackgroundOptions {
+    /**
+     * The background type
+     */
+    type?: 'grid' | 'dots' | 'custom' | 'none';
+    /**
+     * The grid size. Recommended to align this size w/ drag grid settings if applicable.
+     * Ignored if type is set to `custom` or `none`.
+     */
+    size?: number;
+    /**
+     * If type is set to `custom`, provide your custom HTML. Ignored if background
+     * type is not set to `custom`.
+     */
+    html?: string;
+}
 /**
  * Main options
  */
+declare type Config = NoOptionals<Options> & {
+    drag?: NoOptionals<DragOptions>;
+    select?: NoOptionals<SelectOptions>;
+    undo?: NoOptionals<UndoOptions>;
+    panzoom?: NoOptionals<PanZoomOptions>;
+    lasso?: NoOptionals<LassoOptions>;
+};
 interface Options {
+    /**
+     * If graph is nested, the direct parent of this graph. This is necessary for nested graphs
+     * to reconcile scale.
+     */
+    parent?: MXFlowControllerInstance;
+    /**
+     * The width and height of the graph.
+     */
+    width?: number;
+    height?: number;
     model?: Model;
     /**
      * Whether to show the background grid or not. Default is `true`.
-     *
      */
     showGrid?: boolean;
     /**
@@ -397,6 +492,10 @@ interface Options {
      */
     bezierWeight?: number;
     /**
+     * The graph background options
+     */
+    background?: BackgroundOptions;
+    /**
      * Options for the 'drag' tool.
      */
     drag?: DragOptions;
@@ -413,12 +512,22 @@ interface Options {
      */
     panzoom?: PanZoomOptions;
     /**
+     * Options for the "lasso" tool.
+     */
+    lasso?: LassoOptions;
+    /**
      * The render method. When using VanillaJS, this is the method from which the
-     * user can insert thier HTML content into each node and edge. The user must keep
+     * user can insert their HTML content into each node and edge. The user must keep
      * track of HTML content externally as many operations will destroy an items's
      * content section.
      */
-    render?: (type: RenderableType, item: FlowItem) => Element | string;
+    render?: (item: RenderableItem, content: Element | null | undefined, data: {
+        [key: string]: any;
+    }) => Element | string | void;
+    /**
+     * The render method for the context menu.
+     */
+    renderContext?: (item: FlowItem) => Element | string | void;
     /**
      * Custom link validator. This validator will be called repeatedly when a "linking"
      * operation is occurring and then once before a final link is formed. Don't perform any
@@ -466,15 +575,17 @@ interface ActionHandler {
 /**
  * Internal graph API passed to subsystems, etc.
  */
+declare type Methods = ReturnType<typeof getPublicInterface>;
 interface Api {
-    opts: Options;
+    opts: Config;
     dom: FlowDom;
     state: FlowState;
     tools: Map<string, ActionHandler>;
+    renderCache: Map<string, Element | null>;
     emit: <K extends keyof FlowEventMap>(type: K, event?: FlowEventMap[K]) => void;
     lock: (toolName: string) => void;
     unlock: () => void;
-    isLocked: () => boolean;
+    isLocked: (exceptTool?: string) => boolean;
 }
 /**
  * Events emmitted and their parameters
@@ -509,4 +620,31 @@ interface ActionExtendedOpts {
      */
     ignoreAction?: boolean;
 }
-export { Action, ActionExtendedOpts, ActionHandler, ActionType, ActionTypes, AddNodeOptions, Api, ContentModelItem, CreateLinkParams, Edge, EdgeGroup, EdgeModel, FlowDom, FlowEventMap, FlowInternalApi, FlowItem, FlowAttr, FlowClass, FlowItemType, FlowState, GhostLink, Graph, Link, LinkModel, LinkLatchPosition, LinkState, Model, Node, NodeModel, Options, PanZoomOptions, Rect, RenderableType, SelectableItem, SelectOptions, Transform, TransformModel };
+declare type SetViewOptions = {
+    x?: number;
+    y?: number;
+    scale?: number;
+    scaleSteps?: number;
+    transition?: boolean | number;
+} & ActionExtendedOpts;
+declare type InteractionEvent = {
+    type: keyof InteractionEventMap;
+    item: FlowItem | undefined;
+    graphX: number;
+    graphY: number;
+    containerX: number;
+    containerY: number;
+    pageX: number;
+    pageY: number;
+    event: Event;
+};
+interface InteractionEventMap {
+    'contextmenu': InteractionEvent;
+    'down': InteractionEvent;
+    'up': InteractionEvent;
+    'move': InteractionEvent;
+    'keydown': InteractionEvent;
+    'keyup': InteractionEvent;
+    'wheel': InteractionEvent;
+}
+export { Action, ActionExtendedOpts, ActionHandler, ActionType, ActionTypes, AddNodeOptions, AddEdgeOptions, AddLinkOptions, Methods, Api, ContentModelItem, CreateLinkParams, Edge, EdgeGroup, EdgeModel, FlowDom, FlowEventMap, FlowInternalApi, FlowItem, FlowAttr, FlowClass, FlowItemType, FlowState, GhostLink, Graph, Link, LinkModel, LinkLatchPosition, LinkState, Model, Node, NodeModel, Options, Config, PanZoomOptions, Rect, RenderableType, SelectableItem, SelectOptions, Transform, TransformModel, RenderableItem, InteractionEvent, InteractionEventMap, Serializable, SetViewOptions, NoOptionals };

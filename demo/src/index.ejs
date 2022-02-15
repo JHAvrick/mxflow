@@ -19,47 +19,60 @@
         }
 
         body {
-            height: 2000px;
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
+            padding: 2rem;
         }
 
-        .node-content {
+        /* .node-content {
             height: fit-content;
             min-height: 200px;
             background: white;
             border-radius: 5px;
             box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
-            border: 2px solid black;
+            border: 1px solid gray;
             padding: 1rem;
-        }
+        } */
 
-        .mxflow-item--selected .node-content {
-            background: rgb(127, 157, 255);
-        }
+        /* .mxflow-item--selected .node-content {
+            border: 2px solid limegreen;
+            margin: -1px 0 0 -1px;
+        } */
 
-        .mxflow-item--preselected .node-content {
-            background: rgb(255, 208, 0);
-        }
+        /* .mxflow-item--preselected .node-content {
+            border: 1px solid limegreen;
+        } */
 
         .edge-content {
-            width: 15px;
-            height: 15px;
+            width: 12px;
+            height: 12px;
             border-radius: 100%;
             background: rgb(247, 0, 255);
         }
 
+        ul[data-mxflow-edge-group="inputs"] {
+            margin-left: -5px;
+        }
+
+        ul[data-mxflow-edge-group="outputs"] {
+            margin-right: -5px;
+        }
+
         .input-edge {
-            background: rgb(247, 0, 255);
-            margin-left: -7.5px;
+            background: black;
+            border: 2px solid white;
+
             margin-bottom: 10px;
         }
 
         .output-edge {
-            background: rgb(255, 187, 0);
-            margin-right: -7.5px;
+            background: black;
+            border: 1px solid white;
+            
             margin-bottom: 10px;
         }
 
@@ -73,6 +86,11 @@
             background: green;
         }
 
+        /* .mxflow-link-inner {
+            stroke-dasharray: 6;
+            animation: dash 12s linear infinite;
+        } */
+
         ul[data-mxflow-edge-group="center"] {
             position: absolute;
             left: 50%;
@@ -82,11 +100,7 @@
     </style>
 </head>
 <body>
-    <div id="root" style="width:90vw; height:90vh; overflow:hidden; border: 2px solid black; border-radius:3px; margin-bottom: 100px;">
-
-    </div>
-
-    <div id="root2" style="width:90vw; height:90vh; overflow:hidden; border: 2px solid black; border-radius:3px;">
+    <div id="root2" style="width:100vw; height:100vh; overflow:hidden;">
 
     </div>
 </body>

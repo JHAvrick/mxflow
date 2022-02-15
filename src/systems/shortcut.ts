@@ -7,16 +7,34 @@ import hotkeys, { HotkeysEvent } from 'hotkeys-js';
  */
 function MXFlowShortcutTool(api: FlowTypes.Api, methods: ReturnType<typeof getPublicInterface>) : FlowTypes.ActionHandler {
 
+
     const handleUndo = (e: KeyboardEvent, handler: HotkeysEvent) => {
+        if (!methods.eventInGraph(e)) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
         console.log("UNDO");
         methods.undo();
     }
 
     const handleRedo = (e: KeyboardEvent, handler: HotkeysEvent) => {
+        if (!methods.eventInGraph(e)) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        console.log("REDO");
         methods.redo();
     }
 
     const handleDelete = (e: KeyboardEvent, handler: HotkeysEvent) => {
+        if (!methods.eventInGraph(e)) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        console.log("DELETE");
         methods.removedSelectedItems();
     }
 

@@ -1,6 +1,5 @@
 import * as FlowTypes from 'types/flow.types.v2';
 import * as FlowUtil from './flow-util';
-import clone from 'lodash/clone';
 
 const AddNodeDefaultOpts : FlowTypes.AddNodeOptions = {
     x: 0,
@@ -10,8 +9,7 @@ const AddNodeDefaultOpts : FlowTypes.AddNodeOptions = {
     edges: []
 }
 
-const dom = '';
-
+type FlowMethods = ReturnType<typeof getPublicInterface>;
 const getPublicInterface = (api: FlowTypes.Api) => {
     //const opts = api.opts;
     const dom = api.dom;
@@ -19,22 +17,19 @@ const getPublicInterface = (api: FlowTypes.Api) => {
     const transform = api.state.transform;
     const emit = api.emit;
 
-    console.log( "meth9ods", api.dom.instanceId);
-    
-    // const panzoom = {
-    //     //active: false,
-    //     rootWidth: dom.rootEl.getBoundingClientRect().width,
-    //     rootHeight: dom.rootEl.getBoundingClientRect().height,
-    //     deltaX: 0,
-    //     deltaY: 0,
-    //     panStartX: 0,
-    //     panStartY: 0,
-    //     maxDeltaBottom: 0,
-    //     maxDeltaRight: 0,
-    //     lastMoveEvent: PointerEvent | null = null;
-    // }
+    const getCompositeScale = () : number => {
+        if (api.opts.parent){
+            return api.opts.parent.getCompositeScale() + api.state.transform.scale;
+        }
+        return api.state.transform.scale;
+    }
+
+    const getState = () => {
+        return api.state;
+    }
 
     const recordAction = (action: FlowTypes.ActionType) => {
+        console.log(action);
         if (!api.opts.undo?.enabled) return;
         if (api.opts.undo?.actions?.includes(action)){
             state.undo.unshift({
@@ -53,12 +48,13 @@ const getPublicInterface = (api: FlowTypes.Api) => {
     }
 
     const undo = () => {
+        console.log("UNDO");
         if (!api.opts.undo?.enabled) return;
         if (state.undo.length > 1){
             if (state.undo.length > 0){
                 state.redo.unshift(state.undo.shift()!);
             }
-            setModel(clone(state.undo[0]!.model));
+            setModel(FlowUtil.clone(state.undo[0]!.model));
         }
     }
 
@@ -68,7 +64,7 @@ const getPublicInterface = (api: FlowTypes.Api) => {
             if (state.redo.length > 0){
                 state.undo.unshift(state.redo.shift()!);
             }
-            setModel(clone(state.undo[0]!.model));
+            setModel(FlowUtil.clone(state.undo[0]!.model));
         }
     }
 
@@ -109,9 +105,9 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         if (!opts?.ignoreAction) recordAction('select');
     }
     
-        /**
-         * Remove one or more items from the current selection.
-         */
+    /**
+     * Remove one or more items from the current selection using item keys.
+     */
     const removeFromSelection = (keys: string[], opts?: FlowTypes.ActionExtendedOpts) => {
         keys.forEach(key => {
             let selection = state.selected.get(key);
@@ -125,6 +121,11 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         if (!opts?.ignoreAction) recordAction('select');
     }
 
+    /**
+     * Bring one or more nodes to the front.
+     * 
+     * @param nodes - Array of Node items.
+     */
     const bringToTop = (nodes: FlowTypes.Node[]) => {
         let toTop = nodes.sort((a, b) => (a.z > b.z) ? 1 : -1); //Sort given nodes
         let toTopSet = new Set(toTop); 
@@ -157,6 +158,12 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         //api.dom.lassoEl.style.zIndex = (toTop[toTop.length - 1].z + 1).toString();
     }   
 
+    /**
+     * Set which items are "preselected". Any existing "preselect" states will be removed. 
+     * 
+     * @param preselected - Array or map of items to preselect. 
+     * @param opts 
+     */
     const setPreselected = (preselected: FlowTypes.SelectableItem[] | Map<string, FlowTypes.SelectableItem>, opts?: Pick<FlowTypes.ActionExtendedOpts, 'suppressEvent'>) => {
         let s = Array.isArray(preselected) ? new Map(preselected.map(item => [item.key, item])) : preselected;
         if (state.preselected.size !== 0 || s.size !== 0) {
@@ -168,6 +175,16 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         if (!opts?.suppressEvent) emit('preselected', new Map(state.preselected));
     }
 
+    /**
+     * Remove an item from the graph
+     * 
+     * @param type - The item type, one of `node`, `link`, or `edge`
+     * @param key - The item key
+     * @param opts - Extended options
+     * @param opts.suppressEvent - When set to true, no event will be emitted for this action
+     * @param opts.ignoreAction - When set to true, no action will be added to the do/undo stack
+     * @returns 
+     */
     const removeItem = (type: FlowTypes.FlowItemType, key: string, opts?: FlowTypes.ActionExtendedOpts) => {
         let item = getItem(type, key);
         if (item){
@@ -179,22 +196,39 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         }
     }
 
-    const removedSelectedItems = () => {
-        let ignoreSingleActions = state.selected.size > 1;
-
+    /**
+     * Remove currently selected items from the graph. If there are multiple selected items, and `ignoreAction=false`,
+     * then the operations will be batched into a single action.
+     * 
+     * @param opts.suppressEvent - When set to true, no event will be emitted for this action
+     * @param opts.ignoreAction - When set to true, no action will be added to the do/undo stack
+     */
+    const removedSelectedItems = (opts?: FlowTypes.ActionExtendedOpts) => {
+        /**
+         * If the selection size is greater than one, we want to ignore the individual remove 
+         * actions and record the batch action once each operation is complete.
+         */
+        let ignoreSingleActions = state.selected.size > 1; 
         state.selected.forEach(item => {
             removeItem(item.type, item.key, {
-                suppressEvent: false,
-                ignoreAction: ignoreSingleActions //We will use batch "removeItems" if more than one item is being removed
+                suppressEvent: opts?.suppressEvent,
+                ignoreAction: opts?.ignoreAction || ignoreSingleActions //We will use batch "removeItems" if more than one item is being removed
             })
         });
 
         //Record our batch action only if more than one item was removed
-        if (ignoreSingleActions){
+        if (!opts?.ignoreAction && ignoreSingleActions){
             recordAction('removeItems');
         }
     }
 
+    /**
+     * Retrieve an existing item by `type` and `key`.
+     * 
+     * @param type - The item type, one of `graph`, `node`, `edge`, or `link`.
+     * @param key - The item key
+     * @returns {FlowTypes.FlowItem}
+     */
     const getItem = (type?: string | null, key?: string | null) : FlowTypes.FlowItem | undefined =>  {
         let item: FlowTypes.FlowItem | undefined;
         if (type === 'graph'){
@@ -209,16 +243,29 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         return item;
     }
 
-    const eventInGraph = (e: PointerEvent | MouseEvent) => {
-        return (<Element> e.target)?.closest?.(`#${dom.instanceId}`) != null;
+    /**
+     * Checks whether the given event target (if there is one) is within this graph.
+     * 
+     * @param e - The event in question
+     * @returns 
+     */
+    const eventInGraph = (e: { target: EventTarget | null }) => {
+    return (<Element> e.target)?.closest?.(`.${FlowTypes.FlowClass.Container}`)?.id === dom.instanceId;
     }
 
+    /**
+     * Given an event, resolves an item within the graph or returns `undefined` if no item was targeted.
+     * 
+     * @param e - The event in question, either `PointerEvent` or `MouseEvent`
+     * @returns {FlowTypes.FlowItem | undefined}
+     */
     const resolveItem = (e: PointerEvent | MouseEvent) => {
+        if (!eventInGraph(e)) return;
+
         let item: FlowTypes.FlowItem | undefined;
-        if (e.target && e.target instanceof Element){
-            if (!eventInGraph(e)) return;
-            
-            let closestItem = e.target.closest(`[${FlowTypes.FlowAttr.Type}]`);
+        let target = document.elementFromPoint(e.clientX, e.clientY);
+        if (target /*e.target && e.target instanceof Element */){
+            let closestItem = target.closest(`[${FlowTypes.FlowAttr.Type}]`);
             if (closestItem){
                 closestItem.getAttribute
                 item = getItem(
@@ -230,26 +277,12 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         return item;
     }
 
-    const setEdgeContent = (nodeKey: string, edgeKey: string, content: HTMLElement | string) => {
-        let edge = state.edges.get(`${nodeKey}:${edgeKey}`);
-        if (edge){
-            if (content instanceof HTMLElement){
-                edge.el.innerHTML = '';
-                edge.el.appendChild(content);
-            } else {
-                edge.el.innerHTML = '';
-                edge.el.insertAdjacentHTML('afterbegin', content);
-            }
-        }
-        throw new Error(`MXFlow: Attempted to set edge content on edge which doesn't exist (key="${`${nodeKey}:${edgeKey}`}")`);
-    }
-
     const addEdge = (group: string, nodeKey: string, edgeKey: string, opts?: FlowTypes.AddEdgeOptions) : FlowTypes.Edge => {
         let key = `${nodeKey}:${edgeKey}`;
         if (!state.edges.has(key)){
             let node = state.nodes.get(nodeKey);
             if (node){
-                let edge = FlowUtil.createEdge(node, group, edgeKey);
+                let edge = FlowUtil.createEdge(node, group, edgeKey, opts?.class);
                     edge.data = opts?.data || {};
 
                 state.edges.set(key, edge);
@@ -287,36 +320,47 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         throw new Error(`MXFlow: No edge exists with key="${key}"`);
     }
 
-    const setNodeContent = (nodeKey: string, content: HTMLElement | string) => {
-        let node = state.nodes.get(nodeKey);
-        if (node){
-            if (content instanceof HTMLElement){
-                node.contentEl.innerHTML = ''
-                node.contentEl.appendChild(content);
-            } else {
-                node.contentEl.innerHTML = ''
-                node.contentEl.insertAdjacentHTML('afterbegin', content);
-            }
-        }
-        throw new Error(`MXFlow: Attempted to set node content on node which doesn't exist (key="${nodeKey}")`);
-    }
+    // const setNodeContent = (nodeKey: string, content: HTMLElement | string) => {
+    //     let node = state.nodes.get(nodeKey);
+    //     if (node){
+    //         if (content instanceof HTMLElement){
+    //             node.contentEl.innerHTML = ''
+    //             node.contentEl.appendChild(content);
+    //         } else {
+    //             node.contentEl.innerHTML = ''
+    //             node.contentEl.insertAdjacentHTML('afterbegin', content);
+    //         }
+    //     }
+    //     throw new Error(`MXFlow: Attempted to set node content on node which doesn't exist (key="${nodeKey}")`);
+    // }
 
     const addNode = (nodeKey: string, options: FlowTypes.AddNodeOptions = {}) => {
-        let opts = { ...AddNodeDefaultOpts, ...options }
+        let opts = { ...AddNodeDefaultOpts, ...options };
         if (!state.nodes.has(nodeKey)){
-            //Create the node 
-
-            let node = FlowUtil.createNode(nodeKey, opts.x || 0, opts.y || 0, state.nodes.size + 1, api.opts.nodeHTMLTemplate);
-                node.data = opts.data || {};
+            let node = FlowUtil.createNode({
+                template: api.opts.nodeHTMLTemplate,
+                key: nodeKey,
+                x: opts.x ?? 0,
+                y: opts.y ?? 0,
+                z: state.nodes.size + 1,
+                width: opts.width,
+                height: opts.height,
+                nodeClass: opts.class,
+                data: opts.data
+            })
 
             state.nodes.set(nodeKey, node);
 
             //Create edges
             options.edges?.forEach(config => {
-                addEdge(config.group, nodeKey, config.key, { suppressEvent: true, ignoreAction: true })
+                addEdge(config.group, nodeKey, config.key, { 
+                    data: config.data, 
+                    class: config.class,
+                    suppressEvent: true, 
+                    ignoreAction: true 
+                })
             })
 
-            
             render(node);
 
             //Add node and bind position
@@ -331,6 +375,24 @@ const getPublicInterface = (api: FlowTypes.Api) => {
 
         throw new Error(`MXFlow: Attempted to add a node with a key that already exists (key="${nodeKey}")`);
     }
+
+    // const updateNodeTemplate = (node: string | FlowTypes.Node, htmlTemplate: string) => {
+    //     if (typeof node === 'string'){
+    //         node = <FlowTypes.Node> getItem('node', node);
+    //         if (!node){
+    //             throw new Error(`updateNodeTemplate(): No node exists with key="${node}"`);
+    //         }
+    //     }
+
+    //     FlowUtil.updateNodeTemplate(api, node, htmlTemplate);
+
+    //     render(node); //Render node
+    //     state.edges.forEach(edge => { //Render any node edges
+    //         if (edge.nodeKey === (<FlowTypes.Node> node).key){
+    //             render(edge);
+    //         }
+    //     })
+    // }
 
     const removeNode = (key: string, opts?: FlowTypes.ActionExtendedOpts) => {
         let node = state.nodes.get(key);
@@ -395,7 +457,7 @@ const getPublicInterface = (api: FlowTypes.Api) => {
 
         let key = FlowUtil.getLinkCompositeKey(params);
         if (!state.links.has(key)){
-            let link = FlowUtil.createLink(params);
+            let link = FlowUtil.createLink(params, opts?.class);
                 link.data = opts?.data || {};
 
             state.links.set(key, link);
@@ -501,6 +563,8 @@ const getPublicInterface = (api: FlowTypes.Api) => {
                 selected: state.selected.has(node.key),
                 x: node.x,
                 y: node.y,
+                width: node.width,
+                height: node.height,
                 data: node.data
             }
         })
@@ -541,6 +605,8 @@ const getPublicInterface = (api: FlowTypes.Api) => {
             addNode(entry[0], {
                 x: entry[1].x,
                 y: entry[1].y,
+                width: entry[1].width,
+                height: entry[1].height,
                 suppressEvent: false,
                 ignoreAction: true
             })
@@ -658,14 +724,6 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         dom.rootEl.style.transform = `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`;
     }
 
-    type SetViewOptions = {
-        x?: number,
-        y?: number,
-        scale?: number,
-        scaleSteps?: number,
-        transition?: boolean | number
-    } & FlowTypes.ActionExtendedOpts;
-
     /**
      * Resolves a set of page coordinates to a position within the graph container.
      * 
@@ -704,7 +762,7 @@ const getPublicInterface = (api: FlowTypes.Api) => {
      * transition time in milliseconds.
      * @returns 
      */
-    const setView = (opts: SetViewOptions) => {
+    const setView = (opts: FlowTypes.SetViewOptions) => {
         if (api.isLocked()) return; //Ignore setView if our control is locked
 
         let rootRect = dom.rootEl.getBoundingClientRect();
@@ -765,6 +823,12 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         //TODO: transform action here?
     }
 
+    /**
+     * Moves the viewport x/y to focus on a particular node.
+     * 
+     * @param node - The Node item to focus
+     * @param scale - Optionally set the new scale
+     */
     const focus = (node: FlowTypes.Node, scale?: number) => {
         let containerRect = dom.containerEl.getBoundingClientRect();
         let nodeRect = node.el.getBoundingClientRect();
@@ -790,10 +854,9 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         redo,
         addEdge,
         removeEdge,
-        setEdgeContent,
         addNode,
         removeNode,
-        setNodeContent,
+        //updateNodeTemplate,
         addLink,
         removeLink,
         isLinkValid,
@@ -812,6 +875,7 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         getModel,
         setModel,
         getDom,
+        getState,
         getNodes,
         getEdges,
         getLinks,
@@ -821,8 +885,9 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         setView,
         focus,
         render,
-        renderAll
+        renderAll,
+        getCompositeScale
     }
 }
 
-export { getPublicInterface };
+export { getPublicInterface, FlowMethods };

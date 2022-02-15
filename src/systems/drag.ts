@@ -1,73 +1,37 @@
+import * as InteractTypes from 'types/interact.types';
 import * as FlowTypes from 'types/flow.types.v2';
 import * as FlowUtil from '../flow-util';
-import { getPublicInterface } from '../methods';
 
 /**
  * Drag node tool
  */
-function MXFlowDragTool(api: FlowTypes.Api, methods: ReturnType<typeof getPublicInterface>) : FlowTypes.ActionHandler {
+function MXFlowDragTool(api: FlowTypes.Api, methods: FlowTypes.Methods, interactions: InteractTypes.InteractionEmitter) : FlowTypes.ActionHandler {
     let state = api.state;
-    let active = false;
-    let latched = false;
     let items: FlowTypes.Node[] = [];
-    let startX = 0;
-    let startY = 0;
-    let gridX = api.opts.drag?.gridX || 0;
-    let gridY = api.opts.drag?.gridY || 0;
-    let latchThreshold = api.opts.drag?.latchThreshold || 5;
-    let latchThresholdX = gridX ? gridX : latchThreshold;
-    let latchThresholdY = gridY ? gridY : latchThreshold;
+    let gridX = api.opts.drag.gridX || 0;
+    let gridY = api.opts.drag.gridY || 0;
+    //let latchThreshold = api.opts.drag.latchThreshold || 5;
 
-    const onUpdate = (api: FlowTypes.Api) => {
+    const update = (api: FlowTypes.Api) => {
         state = api.state;
-        gridX = api.opts.drag?.gridX || 0;
-        gridY = api.opts.drag?.gridY || 0;
-        latchThreshold = api.opts.drag?.latchThreshold || 5;
-        latchThresholdX = gridX ? gridX : latchThreshold;
-        latchThresholdY = gridY ? gridY : latchThreshold;
+        gridX = api.opts.drag.gridX || 0;
+        gridY = api.opts.drag.gridY || 0;
+        //latchThreshold = api.opts.drag.latchThreshold || 5;
+        // latchThresholdX = gridX ? gridX : latchThreshold;
+        // latchThresholdY = gridY ? gridY : latchThreshold;
     }
 
-    const startDrag = (e: PointerEvent) => {
-        if (state.selected.size === 0 || active) return;
-
-        //Get draggable items
-        items = <FlowTypes.Node[]> Array.from(state.selected.values()).filter(item => item.type === FlowTypes.FlowItemType.Node);
-
-        //TODO: Bounds checking, grid calculations if applicable
-
-        active = true;
-        startX = e.pageX;
-        startY = e.pageY;
-
-        api.lock('drag');
+    const isValid = (e: PointerEvent, item?: FlowTypes.FlowItem) => {
+        //console.log(!state.multi, state.selected.size !== 0, item?.type === 'node', e.pointerType, e.button, api.opts.select.button)
+        return !interactions.isModActive('multiSelectModifier') && 
+                state.selected.size !== 0 && 
+                item && item.type === 'node' && 
+                (e.pointerType !== 'mouse' || e.button === api.opts.controls.selectButton);
     }
 
-    const onDown = (e: PointerEvent, item?: FlowTypes.FlowItem) => {
-        if (!item || item.type !== 'node') return;
-        if (state.multi) return;
-        if (e.button === api.opts.select?.button){
-            let nodrag = false; //TODO - Check whether target has no-drag
-            startDrag(e);
-        }
-    }
-
-    const onMove = (e: PointerEvent) => {
-        if (!e.isPrimary || !active) return;
-
-        //Get raw delta values. These will be the final values unless grid is enabled.
-        let deltaXRaw = (e.pageX - startX) / state.transform.scale;
-        let deltaYRaw = (e.pageY - startY) / state.transform.scale;
-
-        //Calculate grid if necessary
-        let deltaX: number = gridX !== 0 ? (gridX * Math.floor(deltaXRaw / gridX)) : deltaXRaw;
-        let deltaY: number = gridY !== 0 ? (gridY * Math.floor(deltaYRaw / gridY)) : deltaYRaw;
-
-        //Check whether the drag has latched
-        if (!latched && (deltaXRaw > latchThresholdX || deltaYRaw > latchThresholdY)){
-            latched =  true;
-            api.emit('dragStart', [...items]);
-        }
-
+    const applyDrag = (e: InteractTypes.MXDragEvent, finalize: boolean = false) => {
+        let deltaX: number = gridX !== 0 ? (gridX * Math.floor(e.scaledDeltaX / gridX)) : e.scaledDeltaX;
+        let deltaY: number = gridY !== 0 ? (gridY * Math.floor(e.scaledDeltaY / gridY)) : e.scaledDeltaY;
         items.forEach(item => {
             /**
              * Calculate an item's offset from the grid and factor it into the deltas. 
@@ -81,58 +45,59 @@ function MXFlowDragTool(api: FlowTypes.Api, methods: ReturnType<typeof getPublic
             /**
              * Set deltas and apply new position
              */
-            item.deltaX = deltaX - gridOffsetX;
-            item.deltaY = deltaY - gridOffsetY;
-            FlowUtil.applyNodePosition(item);
-        })
-        
-        FlowUtil.applyAllLinkPositions(api);
-        //api.emit('drag', [...items]);
-    }
-
-    const onUp = (e: PointerEvent) => {
-        if (active && e.isPrimary){
-
-            let deltaXRaw = (e.pageX - startX) / state.transform.scale;
-            let deltaYRaw = (e.pageY - startY) / state.transform.scale;
-            let deltaX: number = gridX !== 0 ? (gridX * Math.floor(deltaXRaw / gridX)) : deltaXRaw;
-            let deltaY: number = gridY !== 0 ? (gridY * Math.floor(deltaYRaw / gridY)) : deltaYRaw;
-            items.forEach(item => {
-                let gridOffsetX = gridX !== 0 ? item.x % gridX : 0;
-                let gridOffsetY = gridY !== 0 ? item.y % gridY : 0;
+            if (finalize){
                 let finalX = item.x + (deltaX - gridOffsetX);
                 let finalY = item.y + (deltaY - gridOffsetY);
                 item.x = finalX;
                 item.y = finalY;
                 item.deltaX = 0;
                 item.deltaY = 0;
-                item.el.style.transform = `translate(${finalX}px, ${finalY}px)`;
-            });
-    
-            if (latched) {
-                api.emit('dragEnd', [...items]);
-                methods.recordAction('drag');
+            } else {
+                item.deltaX = deltaX - gridOffsetX;
+                item.deltaY = deltaY - gridOffsetY;
             }
-            
-            /**
-             * Reset drag state
-             */
-            active = false;
-            latched = false;
-            items = [];
-            startX = 0;
-            startY = 0;
 
-            api.unlock();
+            FlowUtil.applyNodePosition(item);
+        })
+        
+        FlowUtil.applyAllLinkPositions(api);
+    }
+
+    const handleDragStart = (e: InteractTypes.MXDragEvent) => {
+        let item = methods.resolveItem(e.source);
+        if (isValid(e.source, item)){
+            items = <FlowTypes.Node[]> Array.from(state.selected.values())
+                .filter(item => item.type === FlowTypes.FlowItemType.Node);
+
+            interactions.on('drag', handleDrag);
+            interactions.on('dragend', handleDragEnd);
+
+            applyDrag(e);
         }
+    }
+
+    const handleDrag = (e: InteractTypes.MXDragEvent) => {
+        applyDrag(e);
+    }
+
+    const handleDragEnd = (e: InteractTypes.MXDragEvent) => {
+        applyDrag(e, true);
+        items = [];
+        interactions.removeListener('drag', handleDrag);
+        interactions.removeListener('dragend', handleDragEnd);
+    }
+
+    interactions.on('dragstart', handleDragStart);
+    const dispose = () => {
+        interactions.removeListener('dragstart', handleDragStart);
+        interactions.removeListener('drag', handleDrag);
+        interactions.removeListener('dragend', handleDragEnd);
     }
 
     return <const> {
         name: 'drag',
-        onUpdate,
-        onDown,
-        onMove,
-        onUp
+        update,
+        dispose
     }
 }
 

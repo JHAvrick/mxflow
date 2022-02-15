@@ -1,7 +1,7 @@
+import * as InteractTypes from 'types/interact.types';
 import * as FlowTypes from 'types/flow.types.v2';
-import { getPublicInterface } from '../methods';
 /**
  * Drag node tool
  */
-declare function MXFlowDragTool(api: FlowTypes.Api, methods: ReturnType<typeof getPublicInterface>): FlowTypes.ActionHandler;
+declare function MXFlowDragTool(api: FlowTypes.Api, methods: FlowTypes.Methods, interactions: InteractTypes.InteractionEmitter): FlowTypes.ActionHandler;
 export default MXFlowDragTool;

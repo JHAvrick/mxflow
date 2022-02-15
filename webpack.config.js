@@ -7,6 +7,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 const babelOptions = {
     "presets": [
@@ -14,15 +15,16 @@ const babelOptions = {
             "useBuiltIns": "usage",
             "corejs": 3,
             "targets": "> 1%, not dead"
-        }],
-        "vue"
+        }]
     ]
 };
 
+console.log(process.env.NODE_ENV);
+
 module.exports = {
     entry: './src/index.ts',
-    mode: 'development',
-    devtool: 'eval-source-map',
+    mode: process.env.NODE_ENV,
+    devtool: process.env.NODE_ENV === 'development' ? 'eval-source-map' : false,
     output: {
         filename: 'mxflow.min.js',
         path: path.resolve(__dirname, 'dist'),
@@ -31,9 +33,9 @@ module.exports = {
             name: 'mxflow'
         }
     },
-    // optimization: {
-    //     minimize: true
-    // },
+    optimization: {
+        minimize: process.env.NODE_ENV !== 'development'
+    },
     devServer: {
         static: {
             directory: path.join(__dirname, 'public'),
@@ -109,14 +111,10 @@ module.exports = {
         plugins: [new TsconfigPathsPlugin()] //https://github.com/dividab/tsconfig-paths-webpack-plugin
     },
     plugins: [
+        new BundleAnalyzerPlugin(),
         new MiniCssExtractPlugin({
             filename: '[name].[chunkhash:8].css'
         }),
-        // new HtmlWebpackPlugin({
-        //     //template: './src/web/index.ejs',
-        //     title: 'MXAUTO',
-        //     realContentHash: false
-        // }),
         new CleanWebpackPlugin()
     ]
 }

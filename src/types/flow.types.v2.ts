@@ -1,3 +1,10 @@
+import { MXFlowControllerInstance } from "../flow";
+import { getPublicInterface } from '../methods';
+
+type NoOptionals<T> = {
+    [P in keyof T]-?: T[P];
+};
+
 interface Rect {
     left: number,
     right: number,
@@ -8,7 +15,7 @@ interface Rect {
 interface FlowDom {
     instanceId: string,
     containerEl: HTMLDivElement
-    lassoEl: HTMLDivElement
+    lassoEl: SVGElement
     contextEl: HTMLDivElement
     rootEl: HTMLDivElement
     nodeContainerEl: HTMLDivElement
@@ -38,7 +45,7 @@ interface FlowState {
      */
     contextOpen: boolean,
 
-    multi: boolean,
+    // multi: boolean,
     undo: Action[],
     redo: Action[],
     transform: Transform
@@ -64,6 +71,8 @@ interface NodeModel {
     selected: boolean,
     x: number,
     y: number,
+    width: number | string,
+    height: number | string,
     data: Serializable
 }
 
@@ -129,11 +138,13 @@ interface Node {
      */
     edgeGroups: Map<string, EdgeGroup>,
     /**
-     * The node's current position
+     * The node's current position and size
      */
     x: number,
     y: number,
     z: number,
+    width: number | string,
+    height: number  | string,
     /**
      * The node's offset position during a drag operation. Always zero unless
      * actively dragging.
@@ -147,10 +158,18 @@ interface Node {
 }
 
 type AddNodeOptions = {
+    class?: string,
+    data?: Serializable,
+    width?: string | number,
+    height?: string | number,
+    edges?: { 
+        group: string, 
+        key: string, 
+        data?: Serializable,
+        class?: string
+    }[],
     x?: number,
     y?: number,
-    edges?: { group: string, key: string }[],
-    data?: Serializable
 } & ActionExtendedOpts;
 
 /**
@@ -182,6 +201,7 @@ interface Edge {
 
 type AddEdgeOptions = {
     data?: Serializable
+    class?: string
 } & ActionExtendedOpts;
 
 interface Link {
@@ -201,6 +221,7 @@ interface Link {
 }
 
 type AddLinkOptions = {
+    class?: string,
     data?: Serializable
 } & ActionExtendedOpts;
 
@@ -271,6 +292,9 @@ enum FlowAttr {
 enum FlowClass {
     Container = 'mxflow-container',
     Root = 'mxflow-root',
+    RootPanning = 'mxflow-root--panning',
+    Background = 'mxflow-background',
+    Dots = 'mxflow-dots',
     Grid = 'mxflow-grid',
     GridInner = 'mxflow-grid-inner',
     GridOuter = 'mxflow-grid-outer',
@@ -367,20 +391,11 @@ interface DragOptions {
  */
 interface SelectOptions {
     /**
-     * Which button code (PointerEvent) should trigger a select action
-     */
-    button: number,
-    /**
      * When set to true (default) multiple items can be selected. Note that
      * this only affects "shift+click" type operations. There are other ways to select multiple
      * items which are unaffected (lasso tool, manually selecting items via `setSelected`).
      */
-    allowMultiselect?: boolean,
-    /**
-     * The "key" (on KeyboardEvent) which triggers a multiselect state. Be sure that your letter casing is correct. 
-     * Defaults to `Shift`.
-     */
-    multiSelectKey?: string
+    multiSelectEnabled?: boolean,
 }
 
 /**
@@ -412,6 +427,7 @@ interface LassoOptions {
  * Options for the `panzoom` system
  */
 interface PanZoomOptions {
+    enabled?: boolean,
     /**
      * The initial x position of the viewport
      */
@@ -435,30 +451,68 @@ interface PanZoomOptions {
     /**
      * Step amount when zooming in or out
      */
-    scaleStep?: number,
+    scaleStep?: number
+}
+
+interface BackgroundOptions {
     /**
-     * The CSS cursor icon to use when panning
+     * The background type
      */
-    panCursor?: "grab",
+    type?: 'grid' | 'dots' | 'custom' | 'none',
     /**
-     * Control customization
+     * The grid size. Recommended to align this size w/ drag grid settings if applicable.
+     * Ignored if type is set to `custom` or `none`.
      */
-    controls?: {
-        /**
-         * Which button code (PointerEvent) should trigger a pan action
-         */
-        panButton?: number
-    }
+    size?: number,
+    /**
+     * If type is set to `custom`, provide your custom HTML. Ignored if background
+     * type is not set to `custom`.
+     */
+    html?: string 
+}
+
+interface ControlOptions {
+    panButton?: 0 | 1 | 2,
+    panModifier?: string | false,
+    panOnWheel?: boolean,
+    zoomOnWheelModifier?: string | false,
+    zoomOnWheel?: boolean,
+    zoomOnPinch?: boolean,
+    zoomOnDoubleClick?: boolean,
+    selectButton?: 0 | 1 | 2,
+    multiSelectModifier?: string | false,
+    lassoModifier?: string | false
+    lassoButton?: 0 | 1 | 2
 }
 
 /**
  * Main options
  */
+type Config = NoOptionals<Options> & {
+    drag?: NoOptionals<DragOptions>,
+    select?: NoOptionals<SelectOptions>,
+    undo?: NoOptionals<UndoOptions>,
+    panzoom?: NoOptionals<PanZoomOptions>,
+    lasso?: NoOptionals<LassoOptions>,
+    controls?: NoOptionals<ControlOptions>
+}
+
+
 interface Options {
+    /**
+     * If graph is nested, the direct parent of this graph. This is necessary for nested graphs
+     * to reconcile scale.
+     */
+    parent?: MXFlowControllerInstance,
+    /**
+     * The width and height of the graph.
+     */
+    width?: number,
+    height?: number,
+
     model?: Model,
     /**
      * Whether to show the background grid or not. Default is `true`.
-     * 
      */
     showGrid?: boolean,
     /**
@@ -479,6 +533,10 @@ interface Options {
      */
     bezierWeight?: number,
     /**
+     * The graph background options
+     */
+    background?: BackgroundOptions
+    /**
      * Options for the 'drag' tool.
      */
     drag?: DragOptions,
@@ -498,6 +556,10 @@ interface Options {
      * Options for the "lasso" tool.
      */
     lasso?: LassoOptions,
+    /**
+     * 
+     */
+    controls?: ControlOptions,
     /**
      * The render method. When using VanillaJS, this is the method from which the
      * user can insert their HTML content into each node and edge. The user must keep
@@ -544,22 +606,23 @@ interface Options {
  */
 interface ActionHandler {
     name: string,
-    onDown?: (e: PointerEvent, item?: FlowItem) => void,
-    onUp?: (e: PointerEvent, item?: FlowItem) => void,
-    onMove?: (e: PointerEvent) => void,
-    onKeyUp?: (e: KeyboardEvent) => void,
-    onKeyDown?: (e: KeyboardEvent) => void,
-    onContextMenu?: (e: MouseEvent, item?: FlowItem) => void,
-    onUpdate?: (api: Api) => void,
-    onCancel?: () => void,
+    // onDown?: (e: PointerEvent, item?: FlowItem) => void,
+    // onUp?: (e: PointerEvent, item?: FlowItem) => void,
+    // onMove?: (e: PointerEvent) => void,
+    // onKeyUp?: (e: KeyboardEvent) => void,
+    // onKeyDown?: (e: KeyboardEvent) => void,
+    // onContextMenu?: (e: MouseEvent, item?: FlowItem) => void,
+    update?: (api: Api) => void,
+    cancel?: () => void,
     dispose?: () => void
 }
 
 /**
  * Internal graph API passed to subsystems, etc.
  */
+type Methods = ReturnType<typeof getPublicInterface>;
 interface Api {
-    opts: Options,
+    opts: Config,
     dom: FlowDom,
     state: FlowState,
     tools: Map<string, ActionHandler>,
@@ -567,7 +630,7 @@ interface Api {
     emit: <K extends keyof FlowEventMap>(type: K, event?: FlowEventMap[K]) => void,
     lock: (toolName: string) => void,
     unlock: () => void,
-    isLocked: () => boolean
+    isLocked: (exceptTool?: string) => boolean
 }
 
 /**
@@ -607,16 +670,14 @@ interface ActionExtendedOpts {
     ignoreAction?: boolean
 }
 
-type ZoomByStepOpts = {
-    smooth?: boolean,
-    steps: number
-} & ActionExtendedOpts
 
-type ZoomToScaleOpts = {
-    smooth?: boolean,
-    scale: number
-} & ActionExtendedOpts
-
+type SetViewOptions = {
+    x?: number,
+    y?: number,
+    scale?: number,
+    scaleSteps?: number,
+    transition?: boolean | number
+} & ActionExtendedOpts;
 
 type InteractionEvent = {
     type: keyof InteractionEventMap,
@@ -649,6 +710,7 @@ export {
     AddNodeOptions,
     AddEdgeOptions,
     AddLinkOptions,
+    Methods,
     Api,
     ContentModelItem,
     CreateLinkParams,
@@ -673,6 +735,7 @@ export {
     Node,
     NodeModel,
     Options,
+    Config,
     PanZoomOptions,
     Rect,
     RenderableType,
@@ -681,9 +744,10 @@ export {
     Transform,
     TransformModel,
     RenderableItem,
-    ZoomByStepOpts,
-    ZoomToScaleOpts,
     InteractionEvent,
     InteractionEventMap,
-    Serializable
+    Serializable,
+    SetViewOptions,
+    NoOptionals,
+    ControlOptions
 }

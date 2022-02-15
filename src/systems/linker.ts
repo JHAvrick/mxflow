@@ -1,3 +1,4 @@
+import * as InteractTypes from 'types/interact.types';
 import * as FlowTypes from 'types/flow.types.v2';
 import * as FlowUtil from '../flow-util';
 import { getPublicInterface } from '../methods';
@@ -5,23 +6,18 @@ import { getPublicInterface } from '../methods';
 /**
  * MXFlow tool which handles lasso selection
  */
-function MXFlowLinkerTool(api: FlowTypes.Api, methods: ReturnType<typeof getPublicInterface>) : FlowTypes.ActionHandler {
+function MXFlowLinkerTool(api: FlowTypes.Api, methods: ReturnType<typeof getPublicInterface>, interactions: InteractTypes.InteractionEmitter) : FlowTypes.ActionHandler {
     const state = api.state;
     const dom = api.dom;
-    let active = false;
+    //let active = false;
     let fromEdge: FlowTypes.Edge | null = null;
     let lastEdge: FlowTypes.Edge | null;
 
     const applyGhostLinkPosition = (e: PointerEvent, toEdge?: FlowTypes.Edge) => {
         let transform = state.transform;
         let containerRect = dom.containerEl.getBoundingClientRect();
-        //let fromEdgeRect = <DOMRect> fromEdge!.el.getBoundingClientRect();
-
-        // let offsetX = api.dom.containerEl.offsetLeft; //containerRect.top;
-        // let offsetY = api.dom.containerEl.offsetTop;//containerRect.left;
         let offsetY = containerRect.top;
         let offsetX = containerRect.left;
-        console.log(offsetX, offsetY);
 
         let latchFrom = FlowUtil.getEdgeLatchPos(fromEdge!, offsetX, offsetY);
         let x1 = latchFrom.x;
@@ -54,34 +50,34 @@ function MXFlowLinkerTool(api: FlowTypes.Api, methods: ReturnType<typeof getPubl
                 (y1 - transform.y) / transform.scale,
                 (x2 - transform.x) / transform.scale,
                 (y2 - transform.y) / transform.scale,
-                api.opts.bezierWeight ?? 0.675
+                api.opts.bezierWeight
             )
         )
     }
 
-    const clean = () => {
-
+    const isValidEvent = (e: PointerEvent, item?: FlowTypes.FlowItem) => {
+        return e.isPrimary && item && item.type === 'edge' && (e.pointerType !== 'mouse' || e.button === api.opts.controls.selectButton);
     }
 
-    const onDown = (e: PointerEvent, item?: FlowTypes.FlowItem) => {
-        if (!item || item.type !== 'edge') return;
-        if (e.button !== api.opts.select?.button) return;
-        if (!active){
+    const handleDown = (e: InteractTypes.MXPointerEvent) => {
+        let item = methods.resolveItem(e.source);
+        if (isValidEvent(e.source, item)){
             item = <FlowTypes.Edge> item;
-            if (api.opts.beforeLinkStart && !api.opts.beforeLinkStart(item)) return;
-
-            active = true;
-            fromEdge = item;
-            dom.ghostLinkEl.style.display = "block";
-            api.lock('linker');
-            applyGhostLinkPosition(e);
-        } 
+            if (api.opts.beforeLinkStart(item)){
+                fromEdge = item;   
+                dom.ghostLinkEl.style.display = "block";
+                api.lock('linker');
+                applyGhostLinkPosition(e.source);
+                interactions.on('move', handleMove);
+                interactions.on('up', handleUp); 
+            }
+        }
     }
 
-    const onMove = (e: PointerEvent) => {
-        if (active){
-            let item = methods.resolveItem(e);
-            if (item && item.type === 'edge'){
+    const handleMove = (e: InteractTypes.MXPointerEvent) => {
+        if (e.source.isPrimary){
+            let item = methods.resolveItem(e.source);
+            if (item && item.key !== fromEdge?.key && item.type === 'edge'){
                 lastEdge = item;
                 let isValid = methods.isLinkValid(fromEdge!, item);
                 if (isValid){
@@ -96,7 +92,7 @@ function MXFlowLinkerTool(api: FlowTypes.Api, methods: ReturnType<typeof getPubl
                     item.el.classList.add(FlowTypes.FlowClass.EdgeInvalid);
                 }
 
-                applyGhostLinkPosition(e, item);
+                applyGhostLinkPosition(e.source, item);
                 return;
 
             } else {
@@ -109,48 +105,47 @@ function MXFlowLinkerTool(api: FlowTypes.Api, methods: ReturnType<typeof getPubl
                 }
             }
 
-            applyGhostLinkPosition(e);
+            applyGhostLinkPosition(e.source);
         }
     }
 
-    const onUp = (e: PointerEvent, item?: FlowTypes.FlowItem) => {
-        endLinking();
-        if (!item || item.type !== 'edge') {
-            return;
-        } else {
-            item = <FlowTypes.Edge> item;
-        }
+    const handleUp = (e: InteractTypes.MXPointerEvent) => {
+        let item = methods.resolveItem(e.source)
+        if (e.source.isPrimary) endLinking();
+        if (!isValidEvent(e.source, item)) return;
 
-        if (e.button !== api.opts.select?.button) return;
-        if (api.opts.beforeLinkEnd && !api.opts.beforeLinkEnd(fromEdge!, item)) return;
+        item = <FlowTypes.Edge> item;
+
+        if (e.source.button !== api.opts.controls.selectButton) return;
+        if (!api.opts.beforeLinkEnd(fromEdge!, item)) return;
         if (methods.isLinkValid(fromEdge!, item)){ //Internal validation
-
-            //Reverse link direction if this link was done backwards
-            // if (fromEdge?.type === 'input'){
-            //     methods.addLink(item.nodeKey, item.edgeKey, fromEdge!.nodeKey, fromEdge!.edgeKey);
-            //     return;
-            // }
-
             methods.addLink(fromEdge!.nodeKey, fromEdge!.edgeKey, item.nodeKey, item.edgeKey);
         }
     }
 
     const endLinking = () => {
-        active = false;
         dom.ghostLinkEl.style.display = "none";
         if (lastEdge){
             lastEdge.el.classList.remove(FlowTypes.FlowClass.EdgeValid);
             lastEdge.el.classList.remove(FlowTypes.FlowClass.EdgeInvalid);
             lastEdge = null;
         }
+
+        interactions.removeListener('move', handleMove);
+        interactions.removeListener('up', handleUp); 
         api.unlock();
+    }
+
+    interactions.on('down', handleDown);
+    const dispose = () => {
+        interactions.removeListener('down', handleDown);
+        interactions.removeListener('move', handleMove);
+        interactions.removeListener('up', handleUp); 
     }
 
     return <const> {
         name: 'linker',
-        onDown,
-        onMove,
-        onUp
+        dispose
     }
 }
 
