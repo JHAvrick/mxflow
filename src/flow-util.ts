@@ -127,13 +127,13 @@ const enumFromStringValue = <T>(enm: { [s: string]: T }, value: string): T | und
 
 const DefaultNodeTemplate = /* HTML */ `
     <div ${FlowTypes.FlowAttr.NodeTemplate}>
-        <ul ${FlowTypes.FlowAttr.EdgeGroup}="inputs" ${FlowTypes.FlowAttr.EdgeLatch}="left">
+        <ul ${FlowTypes.FlowAttr.EdgeGroup}="inputs" ${FlowTypes.FlowAttr.EdgeLatch}="center">
             <!-- Input Edges Dynamically Populated -->
         </ul>
         <div ${FlowTypes.FlowAttr.NodeContent}>
             <!-- Node Content as Provided by User -->
         </div>
-        <ul ${FlowTypes.FlowAttr.EdgeGroup}="outputs" ${FlowTypes.FlowAttr.EdgeLatch}="right">
+        <ul ${FlowTypes.FlowAttr.EdgeGroup}="outputs" ${FlowTypes.FlowAttr.EdgeLatch}="center">
             <!-- Output Edges Dynamically Populated -->
         </ul>
     </div>
@@ -192,14 +192,14 @@ const applyNodeAttributes = (el: HTMLElement, key: string, z: number) => {
     el.style.zIndex = z.toString();
 }
 
-const FlowClasses = new Set<string>(Object.values(FlowTypes.FlowClass));
-const copyFlowClasses = (from: Element, to: Element) => {
-    from.classList.forEach(c => {
-        if (FlowClasses.has(c)) {
-            to.classList.add(c);
-        }
-    })
-}
+// const FlowClasses = new Set<string>(Object.values(FlowTypes.FlowClass));
+// const copyFlowClasses = (from: Element, to: Element) => {
+//     from.classList.forEach(c => {
+//         if (FlowClasses.has(c)) {
+//             to.classList.add(c);
+//         }
+//     })
+// }
 
 type CreateNodeOptions = {
     template?: string,
@@ -209,7 +209,7 @@ type CreateNodeOptions = {
     z: number,
     width?: string | number,
     height?: string | number,
-    nodeClass?: string,
+    nodeClass?: string | string[],
     data?: FlowTypes.Serializable
 }
 
@@ -224,7 +224,7 @@ const createNode = (opts: CreateNodeOptions): FlowTypes.Node => {
 
     //Ensure all template elements are of the correct type
     if (!(el instanceof HTMLElement) /* || !(inputs instanceof HTMLUListElement) || !(outputs instanceof HTMLUListElement) */ || !(content instanceof HTMLElement)) {
-        throw new Error('One more more template elements is of the incorrect element type.');
+        throw new Error('One more more template element is of the incorrect element type.');
     }
 
     if (el instanceof HTMLElement) {
@@ -236,8 +236,16 @@ const createNode = (opts: CreateNodeOptions): FlowTypes.Node => {
     el.classList.add(FlowTypes.FlowClass.Node);
     content.classList.add(FlowTypes.FlowClass.NodeContent);
 
+    //Add any custom classes - these are provided by the user
+    let userClass : string[] = [];
     if (opts.nodeClass && opts.nodeClass.length > 0){
-        el.classList.add(opts.nodeClass);
+        if (Array.isArray(opts.nodeClass)){
+            el.classList.add(...opts.nodeClass);
+            userClass = opts.nodeClass;
+        } else {
+            el.classList.add(opts.nodeClass);
+            userClass = [opts.nodeClass];
+        }
     }
 
     if (opts.width) el.style.width = typeof opts.width === 'number' ? `${opts.width}px` : opts.width;
@@ -257,7 +265,8 @@ const createNode = (opts: CreateNodeOptions): FlowTypes.Node => {
         deltaY: 0,
         width: opts.width ?? 'auto',
         height: opts.height ?? 'auto',
-        data: opts.data ?? {}
+        data: opts.data ?? {},
+        class: userClass
     }
 }
 
@@ -339,13 +348,17 @@ const getLinkCompositeKey = (opts: FlowTypes.CreateLinkParams) => {
 
 const createLink = (opts: FlowTypes.CreateLinkParams, groupClass?: string): FlowTypes.Link => {
     let key = getLinkCompositeKey(opts);
-    let inner = document.createElementNS("http://www.w3.org/2000/svg", 'path');
-        inner.classList.add(FlowTypes.FlowClass.LinkInner);
-        inner.style.pointerEvents = 'none';
+    let band1 = document.createElementNS("http://www.w3.org/2000/svg", 'path');
+        band1.classList.add(FlowTypes.FlowClass.LinkBand1);
+        band1.style.pointerEvents = 'auto';
 
-    let outer = document.createElementNS("http://www.w3.org/2000/svg", 'path');
-        outer.classList.add(FlowTypes.FlowClass.LinkOuter);
-        outer.style.pointerEvents = 'auto';
+    let band2 = document.createElementNS("http://www.w3.org/2000/svg", 'path');
+        band2.classList.add(FlowTypes.FlowClass.LinkBand2);
+        band2.style.pointerEvents = 'none';
+
+    let band3 = document.createElementNS("http://www.w3.org/2000/svg", 'path');
+        band3.classList.add(FlowTypes.FlowClass.LinkBand3);
+        band3.style.pointerEvents = 'none';
 
     let text = document.createElementNS("http://www.w3.org/2000/svg", 'text');
         text.textContent = 'Label';
@@ -366,8 +379,9 @@ const createLink = (opts: FlowTypes.CreateLinkParams, groupClass?: string): Flow
         group.style.pointerEvents = 'none';
         group.setAttribute('draggable', "false");
         group.ondragstart = (e) => e.preventDefault();
-        group.appendChild(inner);
-        group.appendChild(outer);
+        group.appendChild(band1);
+        group.appendChild(band2);
+        group.appendChild(band3);
         group.appendChild(text);
 
     if (groupClass && groupClass.length > 0){
@@ -382,8 +396,9 @@ const createLink = (opts: FlowTypes.CreateLinkParams, groupClass?: string): Flow
         toNode: opts.toNode,
         toEdge: opts.toEdge,
         el: group,
-        innerEl: inner,
-        outerEl: outer,
+        band1: band1,
+        band2: band2,
+        band3: band3,
         labelEl: labelPath,
         data: {}
     }
@@ -393,7 +408,7 @@ const generateFlowEl = (targetEl: HTMLElement, opts: FlowTypes.Config) => {
     let id = 'mxflow-instance-' + Date.now();
     let bg = opts.background.html;
     if (opts.background.type === 'grid' || opts.background.type === 'dots'){
-        bg = generateBackground(opts.background.type, opts.background.size);
+        bg = generateBackground(opts.background.type, opts.background.size, opts.background.radius);
     }
 
     targetEl.insertAdjacentHTML('afterbegin', /* HTML */ `
@@ -451,6 +466,7 @@ const generateFlowEl = (targetEl: HTMLElement, opts: FlowTypes.Config) => {
         lassoEl: <SVGElement>targetEl.querySelector("." + FlowTypes.FlowClass.Lasso)!,
         contextEl: <HTMLDivElement>targetEl.querySelector("." + FlowTypes.FlowClass.Context)!,
         rootEl: <HTMLDivElement>targetEl.querySelector("." + FlowTypes.FlowClass.Root)!,
+        bgEl: <HTMLDivElement>targetEl.querySelector('.' + FlowTypes.FlowClass.Background),
         nodeContainerEl: <HTMLDivElement>targetEl.querySelector("." + FlowTypes.FlowClass.Nodes),
         linkContainerEl: <SVGElement>targetEl.querySelector("." + FlowTypes.FlowClass.Links)!,
         ghostLinkContainerEl: <SVGElement>targetEl.querySelector("." + FlowTypes.FlowClass.GhostLinks)!,
@@ -569,9 +585,10 @@ const applyLinkPosition = (api: FlowTypes.Api, link: FlowTypes.Link) => {
     );
 
     //Apply our bezier curve to both the inner and outer link elements
-    link.outerEl.setAttribute('d', bezier);
-    link.innerEl.setAttribute('d', bezier);
-    link.labelEl.setAttribute('d', bezier);
+    link.band1.setAttribute('d', bezier);
+    link.band2.setAttribute('d', bezier);
+    link.band3.setAttribute('d', bezier);
+    //link.labelEl.setAttribute('d', bezier);
     //console.log(link.innerEl.getBBox());
     // link.fObject.setAttribute('x', center.x + 'px');
     // link.fObject.setAttribute('Y', center.y + 'px');
@@ -594,6 +611,7 @@ export {
     assignProperty,
     getBezierPath,
     intersectRect,
+    DefaultNodeTemplate,
     parseNodeTemplate,
     createNode,
     getEdgeCompositeKey,

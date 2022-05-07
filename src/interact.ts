@@ -163,6 +163,15 @@ const InteractionEmitter = (api: FlowTypes.Api, methods: FlowTypes.Methods) => {
         }
     }
 
+    const handleWheel = (e: WheelEvent) => {
+        if (methods.eventInGraph(e)){
+            //e.preventDefault();
+            emit('wheel', { 
+                source: e
+            });
+        }
+    }
+
     document.addEventListener('pointerdown', handlePointerDown);
     document.addEventListener('pointermove', handlePointerMove);
     document.addEventListener('pointerup', handlePointerUp);
@@ -170,7 +179,7 @@ const InteractionEmitter = (api: FlowTypes.Api, methods: FlowTypes.Methods) => {
     document.addEventListener('keyup', handleKeyUp);
     document.addEventListener('dblclick', handleDoubleClick);
     document.addEventListener('contextmenu', handleContextMenu);
-
+    document.addEventListener('wheel', handleWheel);
     return <const> {
         on<K extends keyof InteractTypes.InteractEventMap>(type: K, listener: (event: InteractTypes.InteractEventMap[K]) => any){
             events.on(type, listener);
@@ -186,6 +195,7 @@ const InteractionEmitter = (api: FlowTypes.Api, methods: FlowTypes.Methods) => {
             document.removeEventListener('keyup', handleKeyUp);
             document.removeEventListener('dblclick', handleDoubleClick);
             document.removeEventListener('contextmenu', handleContextMenu);
+            document.removeEventListener('wheel', handleWheel);
         },
         /**
          * Returns true if the modifier key denoted by the given modifier control option
@@ -198,6 +208,9 @@ const InteractionEmitter = (api: FlowTypes.Api, methods: FlowTypes.Methods) => {
             if (typeof key === 'string'){
                 return modifiers.get(key.toLowerCase());
             }
+        },
+        isModKeyActive(key: string){
+            return modifiers.get(key.toLowerCase());
         },
         rebaseDrag(e: PointerEvent){
             drag.startEvent = e;

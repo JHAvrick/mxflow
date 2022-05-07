@@ -40,7 +40,7 @@ declare function MXFlowController(targetEl: HTMLElement, options: FlowTypes.Opti
     readonly pageToContainerPos: (graphX: number, graphY: number) => number[];
     readonly pageToGraphPos: (pageX: number, pageY: number) => number[];
     readonly setView: (opts: FlowTypes.SetViewOptions) => void;
-    readonly focus: (node: FlowTypes.Node, scale?: number | undefined) => void;
+    readonly focusNode: (node: FlowTypes.Node, scale?: number | undefined) => void;
     readonly render: (item: FlowTypes.RenderableItem, data?: {
         [key: string]: any;
     }) => void;

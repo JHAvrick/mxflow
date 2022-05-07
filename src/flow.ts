@@ -1,5 +1,5 @@
 import * as FlowTypes from 'types/flow.types.v2';
-import { generateFlowEl, flatten, resolveProperty, assignProperty }  from './flow-util';
+import { generateFlowEl, flatten, resolveProperty, assignProperty, DefaultNodeTemplate }  from './flow-util';
 import { EventEmitter, Listener } from 'util/event-emitter';
 import { getPublicInterface } from './methods';
 import MXFlowSelectTool from './systems/select';
@@ -35,6 +35,7 @@ const getMXFlowState = (dom: FlowTypes.FlowDom) : FlowTypes.FlowState => {
 }
 
 const DefaultOpts: FlowTypes.Options = {
+    nodeHTMLTemplate: DefaultNodeTemplate,
     width: 5000,
     height: 5000,
     zIndexStart: 100,
@@ -51,6 +52,7 @@ const DefaultOpts: FlowTypes.Options = {
     background: {
         type: 'dots',
         size: 32,
+        radius: 0.4,
         html: ''
     },
     drag: {
@@ -95,6 +97,7 @@ const DefaultOpts: FlowTypes.Options = {
         panButton: 0,
         panModifier: false,
         panOnWheel: false,
+        panOnArrowKeys: true,
         zoomOnWheelModifier: false,
         zoomOnWheel: true,
         zoomOnPinch: true,

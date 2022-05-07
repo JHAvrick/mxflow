@@ -21,6 +21,8 @@ const babelOptions = {
 
 console.log(process.env.NODE_ENV);
 
+if (process.env.NODE_ENV === 'development' ? 'eval-source-map' : false)
+
 module.exports = {
     entry: './src/index.ts',
     mode: process.env.NODE_ENV,
@@ -41,7 +43,7 @@ module.exports = {
             directory: path.join(__dirname, 'public'),
         },
         compress: true,
-        port: 3000
+        port: 9000
     },
     module: {
         rules: [
@@ -111,7 +113,7 @@ module.exports = {
         plugins: [new TsconfigPathsPlugin()] //https://github.com/dividab/tsconfig-paths-webpack-plugin
     },
     plugins: [
-        new BundleAnalyzerPlugin(),
+        //new BundleAnalyzerPlugin(),
         new MiniCssExtractPlugin({
             filename: '[name].[chunkhash:8].css'
         }),

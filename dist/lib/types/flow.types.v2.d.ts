@@ -12,7 +12,7 @@ interface Rect {
 interface FlowDom {
     instanceId: string;
     containerEl: HTMLDivElement;
-    lassoEl: HTMLDivElement;
+    lassoEl: SVGElement;
     contextEl: HTMLDivElement;
     rootEl: HTMLDivElement;
     nodeContainerEl: HTMLDivElement;
@@ -40,7 +40,6 @@ interface FlowState {
      * Whether the context menu is currently open
      */
     contextOpen: boolean;
-    multi: boolean;
     undo: Action[];
     redo: Action[];
     transform: Transform;
@@ -196,8 +195,9 @@ interface Link {
     toNode: string;
     toEdge: string;
     el: SVGGElement;
-    innerEl: SVGPathElement;
-    outerEl: SVGPathElement;
+    band1: SVGPathElement;
+    band2: SVGPathElement;
+    band3: SVGPathElement;
     labelEl: SVGTextPathElement;
     data: Serializable;
 }
@@ -258,6 +258,7 @@ declare enum FlowAttr {
 declare enum FlowClass {
     Container = "mxflow-container",
     Root = "mxflow-root",
+    RootPanning = "mxflow-root--panning",
     Background = "mxflow-background",
     Dots = "mxflow-dots",
     Grid = "mxflow-grid",
@@ -276,8 +277,9 @@ declare enum FlowClass {
     Lasso = "mxflow-lasso",
     Links = "mxlflow-links",
     Link = "mxflow-link",
-    LinkInner = "mxflow-link-inner",
-    LinkOuter = "mxflow-link-outer",
+    LinkBand1 = "mxflow-link-band1",
+    LinkBand2 = "mxflow-link-band2",
+    LinkBand3 = "mxflow-link-band3",
     LinkValid = "mxflow-link--valid",
     LinkInvalid = "mxflow-link--invalid",
     GhostLinks = "mxflow-ghost-links",
@@ -351,20 +353,11 @@ interface DragOptions {
  */
 interface SelectOptions {
     /**
-     * Which button code (PointerEvent) should trigger a select action
-     */
-    button: number;
-    /**
      * When set to true (default) multiple items can be selected. Note that
      * this only affects "shift+click" type operations. There are other ways to select multiple
      * items which are unaffected (lasso tool, manually selecting items via `setSelected`).
      */
-    allowMultiselect?: boolean;
-    /**
-     * The "key" (on KeyboardEvent) which triggers a multiselect state. Be sure that your letter casing is correct.
-     * Defaults to `Shift`.
-     */
-    multiSelectKey?: string;
+    multiSelectEnabled?: boolean;
 }
 /**
  * Do/undo options
@@ -418,19 +411,6 @@ interface PanZoomOptions {
      * Step amount when zooming in or out
      */
     scaleStep?: number;
-    /**
-     * The CSS cursor icon to use when panning
-     */
-    panCursor?: "grab";
-    /**
-     * Control customization
-     */
-    controls?: {
-        /**
-         * Which button code (PointerEvent) should trigger a pan action
-         */
-        panButton?: number;
-    };
 }
 interface BackgroundOptions {
     /**
@@ -448,6 +428,20 @@ interface BackgroundOptions {
      */
     html?: string;
 }
+interface ControlOptions {
+    panButton?: 0 | 1 | 2;
+    panModifier?: string | false;
+    panOnWheel?: boolean;
+    panOnArrowKeys?: boolean;
+    zoomOnWheelModifier?: string | false;
+    zoomOnWheel?: boolean;
+    zoomOnPinch?: boolean;
+    zoomOnDoubleClick?: boolean;
+    selectButton?: 0 | 1 | 2;
+    multiSelectModifier?: string | false;
+    lassoModifier?: string | false;
+    lassoButton?: 0 | 1 | 2;
+}
 /**
  * Main options
  */
@@ -457,6 +451,7 @@ declare type Config = NoOptionals<Options> & {
     undo?: NoOptionals<UndoOptions>;
     panzoom?: NoOptionals<PanZoomOptions>;
     lasso?: NoOptionals<LassoOptions>;
+    controls?: NoOptionals<ControlOptions>;
 };
 interface Options {
     /**
@@ -516,6 +511,10 @@ interface Options {
      */
     lasso?: LassoOptions;
     /**
+     *
+     */
+    controls?: ControlOptions;
+    /**
      * The render method. When using VanillaJS, this is the method from which the
      * user can insert their HTML content into each node and edge. The user must keep
      * track of HTML content externally as many operations will destroy an items's
@@ -562,14 +561,8 @@ interface Options {
  */
 interface ActionHandler {
     name: string;
-    onDown?: (e: PointerEvent, item?: FlowItem) => void;
-    onUp?: (e: PointerEvent, item?: FlowItem) => void;
-    onMove?: (e: PointerEvent) => void;
-    onKeyUp?: (e: KeyboardEvent) => void;
-    onKeyDown?: (e: KeyboardEvent) => void;
-    onContextMenu?: (e: MouseEvent, item?: FlowItem) => void;
-    onUpdate?: (api: Api) => void;
-    onCancel?: () => void;
+    update?: (api: Api) => void;
+    cancel?: () => void;
     dispose?: () => void;
 }
 /**
@@ -647,4 +640,4 @@ interface InteractionEventMap {
     'keyup': InteractionEvent;
     'wheel': InteractionEvent;
 }
-export { Action, ActionExtendedOpts, ActionHandler, ActionType, ActionTypes, AddNodeOptions, AddEdgeOptions, AddLinkOptions, Methods, Api, ContentModelItem, CreateLinkParams, Edge, EdgeGroup, EdgeModel, FlowDom, FlowEventMap, FlowInternalApi, FlowItem, FlowAttr, FlowClass, FlowItemType, FlowState, GhostLink, Graph, Link, LinkModel, LinkLatchPosition, LinkState, Model, Node, NodeModel, Options, Config, PanZoomOptions, Rect, RenderableType, SelectableItem, SelectOptions, Transform, TransformModel, RenderableItem, InteractionEvent, InteractionEventMap, Serializable, SetViewOptions, NoOptionals };
+export { Action, ActionExtendedOpts, ActionHandler, ActionType, ActionTypes, AddNodeOptions, AddEdgeOptions, AddLinkOptions, Methods, Api, ContentModelItem, CreateLinkParams, Edge, EdgeGroup, EdgeModel, FlowDom, FlowEventMap, FlowInternalApi, FlowItem, FlowAttr, FlowClass, FlowItemType, FlowState, GhostLink, Graph, Link, LinkModel, LinkLatchPosition, LinkState, Model, Node, NodeModel, Options, Config, PanZoomOptions, Rect, RenderableType, SelectableItem, SelectOptions, Transform, TransformModel, RenderableItem, InteractionEvent, InteractionEventMap, Serializable, SetViewOptions, NoOptionals, ControlOptions };

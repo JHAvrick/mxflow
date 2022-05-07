@@ -1,4 +1,5 @@
 import InteractionEmitter from '../interact';
+import { FlowItem } from './flow.types.v2';
 interface Drag {
     thresholdPx: number;
     startEvent: PointerEvent | null;
@@ -13,6 +14,7 @@ interface MXPointerEvent {
     source: PointerEvent;
 }
 interface MXDragEvent {
+    start: PointerEvent;
     source: PointerEvent;
     deltaX: number;
     deltaY: number;
@@ -23,13 +25,17 @@ interface MXKeyboardEvent {
     source: KeyboardEvent;
 }
 interface MXWheelEvent {
-    source: MouseEvent;
+    source: WheelEvent;
 }
 interface MXPinchEvent {
     source: [PointerEvent, PointerEvent];
 }
 interface MXDoubleTapEvent {
     source: PointerEvent | MouseEvent;
+}
+interface MXContextMenuEvent {
+    source: MouseEvent;
+    item?: FlowItem;
 }
 interface InteractEventMap {
     'down': MXPointerEvent;
@@ -43,6 +49,11 @@ interface InteractEventMap {
     'doubletap': MXDoubleTapEvent;
     'keydown': MXKeyboardEvent;
     'keyup': MXKeyboardEvent;
+    'contextmenu': MXContextMenuEvent;
 }
 declare type InteractionEmitter = ReturnType<typeof InteractionEmitter>;
-export { Drag, DoubleTap, MXPointerEvent, MXDragEvent, MXKeyboardEvent, MXWheelEvent, MXPinchEvent, MXDoubleTapEvent, InteractEventMap, InteractionEmitter };
+declare type Modifiers = {
+    'ctrl': boolean;
+    'shift': boolean;
+};
+export { Drag, DoubleTap, MXPointerEvent, MXDragEvent, MXKeyboardEvent, MXWheelEvent, MXPinchEvent, MXDoubleTapEvent, MXContextMenuEvent, InteractEventMap, InteractionEmitter, Modifiers };

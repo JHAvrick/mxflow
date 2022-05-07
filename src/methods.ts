@@ -48,7 +48,6 @@ const getPublicInterface = (api: FlowTypes.Api) => {
     }
 
     const undo = () => {
-        console.log("UNDO");
         if (!api.opts.undo?.enabled) return;
         if (state.undo.length > 1){
             if (state.undo.length > 0){
@@ -336,6 +335,7 @@ const getPublicInterface = (api: FlowTypes.Api) => {
 
     const addNode = (nodeKey: string, options: FlowTypes.AddNodeOptions = {}) => {
         let opts = { ...AddNodeDefaultOpts, ...options };
+        console.log(api.opts.nodeHTMLTemplate);
         if (!state.nodes.has(nodeKey)){
             let node = FlowUtil.createNode({
                 template: api.opts.nodeHTMLTemplate,
@@ -565,6 +565,7 @@ const getPublicInterface = (api: FlowTypes.Api) => {
                 y: node.y,
                 width: node.width,
                 height: node.height,
+                class: node.class,
                 data: node.data
             }
         })
@@ -607,6 +608,7 @@ const getPublicInterface = (api: FlowTypes.Api) => {
                 y: entry[1].y,
                 width: entry[1].width,
                 height: entry[1].height,
+                class: entry[1].class,
                 suppressEvent: false,
                 ignoreAction: true
             })
@@ -829,7 +831,7 @@ const getPublicInterface = (api: FlowTypes.Api) => {
      * @param node - The Node item to focus
      * @param scale - Optionally set the new scale
      */
-    const focus = (node: FlowTypes.Node, scale?: number) => {
+    const focusNode = (node: FlowTypes.Node, scale?: number) => {
         let containerRect = dom.containerEl.getBoundingClientRect();
         let nodeRect = node.el.getBoundingClientRect();
         let x1 = node.x;
@@ -847,6 +849,15 @@ const getPublicInterface = (api: FlowTypes.Api) => {
     const getNodes = () => new Map(state.nodes);
     const getEdges = () => new Map(state.edges);
     const getLinks = () => new Map(state.links);
+
+    /**
+     * Set the background. Use the background helper to generate an SVG `grid` or `dots` background.
+     * 
+     * @param html - The html for the background
+     */
+    const setBackground = (html: string) => {
+        dom.bgEl.innerHTML = html;
+    }
 
     return {
         recordAction,
@@ -883,10 +894,11 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         pageToContainerPos,
         pageToGraphPos,
         setView,
-        focus,
+        focusNode,
         render,
         renderAll,
-        getCompositeScale
+        getCompositeScale,
+        setBackground
     }
 }
 

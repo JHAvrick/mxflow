@@ -76,6 +76,14 @@ function MXFlowLassoTool(api: FlowTypes.Api, methods: ReturnType<typeof getPubli
 
         //Emit events
         methods.setSelected(new Map(state.preselected));
+
+        // //If any items were preselected, record action
+        // if (state.preselected.size > 0){
+        //     console.log(1);
+        //     methods.recordAction(FlowTypes.ActionTypes.SELECT);
+        // }
+
+        //Clear preselection and unlock api
         methods.setPreselected(new Map());
         api.unlock();
 

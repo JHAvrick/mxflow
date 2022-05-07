@@ -18,6 +18,7 @@ interface FlowDom {
     lassoEl: SVGElement
     contextEl: HTMLDivElement
     rootEl: HTMLDivElement
+    bgEl: HTMLDivElement,
     nodeContainerEl: HTMLDivElement
     linkContainerEl: SVGElement
     ghostLinkContainerEl: SVGElement
@@ -73,6 +74,7 @@ interface NodeModel {
     y: number,
     width: number | string,
     height: number | string,
+    class: string[],
     data: Serializable
 }
 
@@ -155,10 +157,14 @@ interface Node {
      * Container for any user-attached data for this node
      */
     data: Serializable
+    /**
+     * User classes
+     */
+    class: string[]
 }
 
 type AddNodeOptions = {
-    class?: string,
+    class?: string | string[],
     data?: Serializable,
     width?: string | number,
     height?: string | number,
@@ -212,8 +218,11 @@ interface Link {
     toNode: string,
     toEdge: string
     el: SVGGElement,
-    innerEl: SVGPathElement,
-    outerEl: SVGPathElement,
+    // innerEl: SVGPathElement,
+    // outerEl: SVGPathElement,
+    band1: SVGPathElement,
+    band2: SVGPathElement,
+    band3: SVGPathElement,
     labelEl: SVGTextPathElement,
     data: Serializable
     // fObject: SVGForeignObjectElement,
@@ -311,8 +320,11 @@ enum FlowClass {
     Lasso = 'mxflow-lasso',
     Links = 'mxlflow-links',
     Link = 'mxflow-link',
-    LinkInner = 'mxflow-link-inner',
-    LinkOuter = 'mxflow-link-outer',
+    // LinkInner = 'mxflow-link-inner',
+    // LinkOuter = 'mxflow-link-outer',
+    LinkBand1 = 'mxflow-link-band1',
+    LinkBand2 = 'mxflow-link-band2',
+    LinkBand3 = 'mxflow-link-band3',
     LinkValid = 'mxflow-link--valid',
     LinkInvalid = 'mxflow-link--invalid',
     GhostLinks = 'mxflow-ghost-links',
@@ -469,12 +481,17 @@ interface BackgroundOptions {
      * type is not set to `custom`.
      */
     html?: string 
+    /**
+     * If type is set to `dots`, this value defines the size of the dots.
+     */
+    radius?: number
 }
 
 interface ControlOptions {
     panButton?: 0 | 1 | 2,
     panModifier?: string | false,
     panOnWheel?: boolean,
+    panOnArrowKeys?: boolean,
     zoomOnWheelModifier?: string | false,
     zoomOnWheel?: boolean,
     zoomOnPinch?: boolean,

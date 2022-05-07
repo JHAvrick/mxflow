@@ -40,7 +40,7 @@ declare const getPublicInterface: (api: FlowTypes.Api) => {
     pageToContainerPos: (graphX: number, graphY: number) => number[];
     pageToGraphPos: (pageX: number, pageY: number) => number[];
     setView: (opts: FlowTypes.SetViewOptions) => void;
-    focus: (node: FlowTypes.Node, scale?: number | undefined) => void;
+    focusNode: (node: FlowTypes.Node, scale?: number | undefined) => void;
     render: (item: FlowTypes.RenderableItem, data?: {
         [key: string]: any;
     }) => void;

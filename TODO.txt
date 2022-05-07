@@ -1,2 +1,32 @@
-TODO:
-  - Consider moving zoom recalc on resize outside of panzoom
+Basic Features Before Release:
+ [ ] Optimize bundle for publishing (bundle size seems good)
+ [ ] Add helpers to exports
+ [x] Make links 3-band svgs and adjust styling to match
+ [ ] Themes
+    [ ] Light
+    [ ] Dark
+    [ ] Modern (copy of react-flow style)
+    [ ]
+    [ ] Blender
+ [ ] Demos
+    [ ] Basic
+    [ ] Theming / Custom Styling
+    [ ] Background
+    [ ] Grid
+    [ ] Context Menu
+    [ ] Do / Undo
+    [ ] Custom Node Template
+    [ ] Custom Edge Groups
+
+Bugs: 
+  [x] Arrow keys move multiple instances if present
+
+Future Features
+  [ ] Link Labels
+  [ ] Custom class support 
+  
+
+
+Refactors:
+  [ ] Consider moving zoom recalc on resize outside of panzoom so that it can handle recalc even if user is not using the pan/zoom feature
+  [ ] Add ability to record custom actions

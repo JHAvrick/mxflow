@@ -10,6 +10,7 @@ function MXFlowDragTool(api: FlowTypes.Api, methods: FlowTypes.Methods, interact
     let items: FlowTypes.Node[] = [];
     let gridX = api.opts.drag.gridX || 0;
     let gridY = api.opts.drag.gridY || 0;
+    let deltaChanged = false;
     //let latchThreshold = api.opts.drag.latchThreshold || 5;
 
     const update = (api: FlowTypes.Api) => {
@@ -32,6 +33,12 @@ function MXFlowDragTool(api: FlowTypes.Api, methods: FlowTypes.Methods, interact
     const applyDrag = (e: InteractTypes.MXDragEvent, finalize: boolean = false) => {
         let deltaX: number = gridX !== 0 ? (gridX * Math.floor(e.scaledDeltaX / gridX)) : e.scaledDeltaX;
         let deltaY: number = gridY !== 0 ? (gridY * Math.floor(e.scaledDeltaY / gridY)) : e.scaledDeltaY;
+
+        //Track when delta changes. We don't want to record any action when grid dragging unless an item actually moved
+        if (!deltaChanged && (deltaX !== 0 || deltaY !== 0)){
+            deltaChanged = true;
+        }
+
         items.forEach(item => {
             /**
              * Calculate an item's offset from the grid and factor it into the deltas. 
@@ -72,6 +79,7 @@ function MXFlowDragTool(api: FlowTypes.Api, methods: FlowTypes.Methods, interact
             interactions.on('drag', handleDrag);
             interactions.on('dragend', handleDragEnd);
 
+            deltaChanged = false;
             applyDrag(e);
         }
     }
@@ -85,6 +93,14 @@ function MXFlowDragTool(api: FlowTypes.Api, methods: FlowTypes.Methods, interact
         items = [];
         interactions.removeListener('drag', handleDrag);
         interactions.removeListener('dragend', handleDragEnd);
+
+        /**
+         * If our deltas actually changed during this drag (may not have if grid is enabled),
+         * record our drag action
+         */
+        if (deltaChanged){
+            methods.recordAction(FlowTypes.ActionTypes.DRAG);
+        }
     }
 
     interactions.on('dragstart', handleDragStart);

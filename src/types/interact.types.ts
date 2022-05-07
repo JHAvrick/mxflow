@@ -31,7 +31,7 @@ interface MXKeyboardEvent {
 }
 
 interface MXWheelEvent {
-    source: MouseEvent
+    source: WheelEvent
 }
 
 interface MXPinchEvent {

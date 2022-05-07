@@ -1,0 +1,218 @@
+/**
+ * ------------------------------------------------
+ * Container / Root
+ * ------------------------------------------------
+ */
+.mxflow-container {
+    background: #1d1d1d;
+}
+
+.mxflow-root--panning {
+    cursor: grab;
+}
+
+
+/**
+ * ------------------------------------------------
+ * Background
+ * ------------------------------------------------
+ */
+.mxflow-grid-inner {
+    stroke:#111111;
+}
+
+.mxflow-grid-outer {
+    stroke:#111111;
+}
+
+.mxflow-dots circle {
+    fill: #404040
+}
+
+/**
+ * ------------------------------------------------
+ * Node
+ * ------------------------------------------------
+ */
+.mxflow-node {
+    background: #303030;
+    border-radius: 3px;
+    border: 2px solid black;
+    /* box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);  */
+    /* box-shadow: 0 .5rem 1rem rgba(0,0,0,.15); */
+    box-shadow: 0px 4px 12px 2px rgba(0,0,0,0.4);
+    transition: background 100ms;
+    /* opacity: .95; */
+}
+
+.mxflow-node-content {
+    width: 100%;
+}
+
+.mxflow-node.mxflow-item--preselected {
+    /* background: #00c5fc; */
+    /* border: 2px solid #00c5fc; */
+    transition: background 100ms;
+}
+
+.mxflow-node.mxflow-item--preselected::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    width: calc(100% + 2px);
+    height: calc(100% + 2px);
+    background: #00c5fc4b;
+    border-radius: 3px;
+}
+
+.mxflow-node.mxflow-item--selected {
+    transition: background 100ms;
+    border: 2px solid white;
+}
+
+.mxflow-node-header {
+    width: 100%;
+    height: 25px;
+    font-size: 14px;
+    color: white;
+    border-radius: 2px 2px 0 0;
+    padding: 0 7px;
+    background: rgb(73, 73, 73);
+    display: flex;
+    align-items: center;
+}
+
+.mxflow-node--green .mxflow-node-header { background: #2b652b; }
+.mxflow-node--blue .mxflow-node-header { background: #54a0cf; }
+.mxflow-node--purple .mxflow-node-header { background: #3c3c83 }
+.mxflow-node--red .mxflow-node-header { background: #3c1d26; }
+.mxflow-node--pink .mxflow-node-header { background: #83314a; }
+.mxflow-node--orange .mxflow-node-header { background: #54a0cf; }
+
+/* .mxflow-node--green.mxflow-item--selected {
+    border: 1px solid #56a556;
+}
+
+.mxflow-node--blue .mxflow-node-header { background: #54a0cf; }
+
+.mxflow-node--blue.mxflow-item--selected {
+    border: 1px solid #54a0cf;
+} */
+
+.mxflow-node-body {
+    padding: 5px 10px;
+    font-size: 14px;
+    color: white;
+}
+
+/**
+ * ------------------------------------------------
+ * Edges
+ * ------------------------------------------------
+ */
+ul[data-mxflow-edge-group="inputs"] {
+    margin-left: -6px;
+}
+
+ul[data-mxflow-edge-group="outputs"] {
+    margin-right: -6px;
+}
+
+.mxflow-edge {
+    width: 10px;
+    height: 10px;
+    background: #63c763;
+    border: 1px solid black;
+    margin-bottom: 15px;
+    border-radius: 100%;
+}
+
+.mxflow-edge-group {
+    /* position: absolute; */
+    list-style-type: none;
+    margin: 0;
+    padding: 38px 0;
+    height: 100%;
+}
+
+.mxflow-link-band1 {
+    fill: none;
+    stroke-width: 15px;
+    stroke: #ffffff1c;
+    opacity: 0;
+    cursor: pointer;
+    transition: opacity 100ms;
+    pointer-events: auto;
+}
+
+.mxflow-item--selected .mxflow-link-band1,
+.mxflow-link-band1:hover {
+    opacity: 1;
+    transition: opacity 100ms;
+}
+
+.mxflow-link-band2 {
+    display: none;
+    stroke-width: 3px;
+    stroke: black;
+    fill: none;
+    cursor: pointer;
+}
+
+.mxflow-link-band3 {
+    stroke-width: 2px;
+    /* stroke:rgb(255, 255, 255); */
+    stroke: white;
+    fill: none;
+    cursor: pointer;
+}
+
+.mxflow-ghost-link {
+    fill: rgb(255, 255, 255);
+    stroke: rgb(255, 255, 255);
+    opacity: .75;
+    stroke-width: 2px;
+    z-index: 1000;
+    transition: stroke 100ms;
+    fill: none;
+    pointer-events: none;
+    stroke-dasharray: 6;
+    animation: dash 12s linear infinite;
+}
+
+.mxflow-link--invalid {
+    stroke: red;
+    transition: stroke 100ms;
+}
+
+.mxflow-link--valid {
+    stroke: rgb(0, 255, 85);
+    transition: stroke 100ms;
+}
+
+@keyframes dash {
+    from {
+      stroke-dashoffset: 1000;
+    }
+}
+
+
+/**
+ *
+ */
+.mxflow-lasso {
+    stroke-width: 1;
+    stroke-dasharray: 5, 5;
+    stroke: rgb(255, 255, 255);
+    fill:rgba(255, 255, 255, 0.05);
+}
+
+.mxflow-context {
+    min-width: 200px;
+    min-height: 150px;
+    background: rgba(0,0,0, .5);
+    border-radius: 4px;
+    color: white;
+    padding: 1rem;
+}

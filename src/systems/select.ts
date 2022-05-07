@@ -19,6 +19,7 @@ function MXFlowSelectTool(api: FlowTypes.Api, methods: FlowTypes.Methods, intera
         let multi = interactions.isModActive('multiSelectModifier');
         if (item.type === 'graph'){
             if (multi) return;
+            if (interactions.isModActive('lassoModifier') && e.button === api.opts.controls.lassoButton) return; 
             if (e.button === api.opts.controls.selectButton /* && api.dom.containerEl.contains(<HTMLElement> e.target) */){
                 methods.setSelected([]);
             }

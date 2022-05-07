@@ -7,7 +7,7 @@ import { FlowClass } from '../types/flow.types.v2';
  * @param size - The size of the background
  * @returns 
  */
-const generateBackground = (type: 'grid' | 'dots', size?: number) => {
+const generateBackground = (type: 'grid' | 'dots', size?: number, radius?: number) => {
     let bg: string = '';
     if (type === 'grid'){
         let _size = size ? size : 32;
@@ -26,9 +26,10 @@ const generateBackground = (type: 'grid' | 'dots', size?: number) => {
         `
     } else {
         let _size = size ? size : 15;
+        let _radius = radius ? radius : 0.4;
         bg = /* SVG */ `
             <pattern id="mxflow-dot-pattern" x="0" y="0" width="${_size}" height="${_size}" patternUnits="userSpaceOnUse">
-                <circle cx="0.4" cy="0.4" r="0.4" fill="#81818a"></circle>
+                <circle cx="${_radius}" cy="${_radius}" r="${_radius}" fill="#81818a"></circle>
             </pattern>
             <rect x="0" y="0" width="100%" height="100%" fill="url(#mxflow-dot-pattern)"></rect>
         `

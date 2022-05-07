@@ -95,7 +95,7 @@ declare const createLink: (opts: FlowTypes.CreateLinkParams, groupClass?: string
 declare const generateFlowEl: (targetEl: HTMLElement, opts: FlowTypes.Config) => {
     instanceId: string;
     containerEl: HTMLDivElement;
-    lassoEl: HTMLDivElement;
+    lassoEl: SVGElement;
     contextEl: HTMLDivElement;
     rootEl: HTMLDivElement;
     nodeContainerEl: HTMLDivElement;
