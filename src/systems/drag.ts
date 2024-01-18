@@ -11,19 +11,14 @@ function MXFlowDragTool(api: FlowTypes.Api, methods: FlowTypes.Methods, interact
     let gridX = api.opts.drag.gridX || 0;
     let gridY = api.opts.drag.gridY || 0;
     let deltaChanged = false;
-    //let latchThreshold = api.opts.drag.latchThreshold || 5;
 
     const update = (api: FlowTypes.Api) => {
         state = api.state;
         gridX = api.opts.drag.gridX || 0;
         gridY = api.opts.drag.gridY || 0;
-        //latchThreshold = api.opts.drag.latchThreshold || 5;
-        // latchThresholdX = gridX ? gridX : latchThreshold;
-        // latchThresholdY = gridY ? gridY : latchThreshold;
     }
 
     const isValid = (e: PointerEvent, item?: FlowTypes.FlowItem) => {
-        //console.log(!state.multi, state.selected.size !== 0, item?.type === 'node', e.pointerType, e.button, api.opts.select.button)
         return !interactions.isModActive('multiSelectModifier') && 
                 state.selected.size !== 0 && 
                 item && item.type === 'node' && 

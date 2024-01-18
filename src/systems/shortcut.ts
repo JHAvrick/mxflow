@@ -14,7 +14,6 @@ function MXFlowShortcutTool(api: FlowTypes.Api, methods: ReturnType<typeof getPu
         e.preventDefault();
         e.stopPropagation();
 
-        console.log("UNDO");
         methods.undo();
     }
 
@@ -24,7 +23,6 @@ function MXFlowShortcutTool(api: FlowTypes.Api, methods: ReturnType<typeof getPu
         e.preventDefault();
         e.stopPropagation();
 
-        console.log("REDO");
         methods.redo();
     }
 
@@ -34,8 +32,7 @@ function MXFlowShortcutTool(api: FlowTypes.Api, methods: ReturnType<typeof getPu
         e.preventDefault();
         e.stopPropagation();
 
-        console.log("DELETE");
-        methods.removedSelectedItems();
+        methods.removeSelectedItems();
     }
 
     hotkeys('delete', { element: api.dom.containerEl }, handleDelete);

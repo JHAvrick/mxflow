@@ -44,11 +44,13 @@
  */
 .mxflow-node {
     background: #1f2940;
-    border-radius: 3px;
+    border-radius: 5px;
     border: 2px solid #1f2940;
     /* box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);  */
     box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
     transition: background 100ms;
+    color: #b5c1db;
+    font-size: 12px;
 }
 
 .mxflow-node-content {
@@ -83,28 +85,46 @@
  * Edges
  * ------------------------------------------------
  */
+.mxflow-edge-group {
+    top: 20px;
+}
+
 ul[data-mxflow-edge-group="inputs"] {
-    margin-left: -7.5px;
+    margin-left: -2px;
+    top: 10px;
+}
+
+ul[data-mxflow-edge-group="inputs"] .mxflow-edge {
+    border-radius: 0px 3px 3px 0px;
 }
 
 ul[data-mxflow-edge-group="outputs"] {
-    margin-right: -7px;
+    margin-right: -2px;
+    top: 10px;
+}
+
+ul[data-mxflow-edge-group="outputs"] .mxflow-edge {
+    border-radius: 3px 0px 0px 3px;
 }
 
 .mxflow-edge {
-    width: 12px;
-    height: 12px;
-    background: #00ffea;
-    border: 2px solid #005e56;
-    margin-bottom: 12px;
-    border-radius: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 11px;
+    min-width: 50px;
+    height: 17px;
+    background: #00ffea3f;
+    color: #00c6ff;
+    margin-bottom: 15px;
+    padding: 0 5px;
+    text-transform: uppercase;
 }
 
 .mxflow-edge-group {
-    /* position: absolute; */
     list-style-type: none;
     margin: 0;
-    padding: 1.5rem 0;
+    padding: 3rem 0;
     height: 100%;
 }
 
@@ -126,15 +146,10 @@ ul[data-mxflow-edge-group="outputs"] {
 
 .mxflow-link-band2 {
     display: none;
-    /* stroke-width: 3px;
-    stroke: #005e56;
-    fill: none;
-    cursor: pointer; */
 }
 
 .mxflow-link-band3 {
-    stroke-width: 1px;
-    /* stroke:rgb(255, 255, 255); */
+    stroke-width: 2px;
     stroke: white;
     fill: none;
     cursor: pointer;
@@ -169,7 +184,6 @@ ul[data-mxflow-edge-group="outputs"] {
     }
 }
 
-
 /**
  *
  */
@@ -182,7 +196,6 @@ ul[data-mxflow-edge-group="outputs"] {
 
 .mxflow-context {
     min-width: 200px;
-    min-height: 150px;
     background: rgba(0,0,0, .5);
     border-radius: 4px;
     color: white;

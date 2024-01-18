@@ -82,7 +82,8 @@ interface EdgeModel {
     nodeKey: string,
     edgeKey: string,
     groupKey: string,
-    data: Serializable
+    data: Serializable,
+    class: string
 }
 
 interface LinkModel {
@@ -202,7 +203,8 @@ interface Edge {
     nodeKey: string,
     edgeKey: string,
     el: HTMLElement,
-    data: Serializable
+    data: Serializable,
+    class: string
 }
 
 type AddEdgeOptions = {
@@ -295,7 +297,7 @@ enum FlowAttr {
     NodeTemplate = 'data-mxflow-node-template',
     NodeContent = 'data-mxflow-node-content',
     EdgeGroup = 'data-mxflow-edge-group',
-    EdgeLatch = 'data-mxflow-edge-latch'
+    EdgeLatch = 'data-mxflow-edge-latch',
 }
 
 enum FlowClass {
@@ -587,7 +589,7 @@ interface Options {
     /**
      * The render method for the context menu. 
      */
-    renderContext?: (item: FlowItem) => Element | string | void,
+    renderContext?: (item: FlowItem, graphX: number, graphY: number) => Element | string | void,
     /**
      * Custom link validator. This validator will be called repeatedly when a "linking"
      * operation is occurring and then once before a final link is formed. Don't perform any
@@ -766,5 +768,6 @@ export {
     Serializable,
     SetViewOptions,
     NoOptionals,
-    ControlOptions
+    ControlOptions,
+    DragOptions
 }

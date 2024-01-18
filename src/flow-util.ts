@@ -13,12 +13,7 @@ const getBezierPath = (x1: number, y1: number, x2: number, y2: number, weight: n
     return `M${x1} ${y1} C ${bx2} ${y1} ${bx3} ${y2} ${x2} ${y2}`
 }
 
-const swapValues = (var1: any, var2: any) => {
-    let t = var1;
-    var1 = var2;
-    var2 = t;
-    return [var1, var2];
-}
+const swapValues = <T> (var1: T, var2: T) : [T, T] => [var1, var2];
 
 /**
  * Clone simpe objects
@@ -298,7 +293,8 @@ const createEdge = (node: FlowTypes.Node, groupKey: string, edgeKey: string, edg
         nodeKey: node.key,
         edgeKey: edgeKey,
         el: el,
-        data: {}
+        data: {},
+        class: edgeClass ?? ''
     }
 }
 
@@ -545,37 +541,6 @@ const applyLinkPosition = (api: FlowTypes.Api, link: FlowTypes.Link) => {
         [y1, y2] = swapValues(y1, y2);
     }
 
-    //let centerY = Math.abs((y1 - transform.y) - (y2 - transform.y));
-
-
-    /**
-     * Get the center between the two Y positions
-     */
-    // let fObjectRect = link.fObject.getBoundingClientRect();
-    // let fObjectOffsetX = fObjectRect.width / 2;
-    // let fObjextOffsetY = fObjectRect.height / 2;
-
-    // let minX = Math.min(x1, x2);
-    // let maxX = Math.max(x1, x2);
-    // let minY = Math.min(y1, y2);
-    // let maxY = Math.max(y1, y2);
-    // let centerY = minY + ((maxY - minY) / 2);
-    // let centerX = minX + ((maxX - minX) / 2);
-
-    // let center = getQuadraticCurvePoint(
-    //     (x1 - transform.x) / transform.scale, 
-    //     ((y1 - 50) - transform.y) / transform.scale, 
-    //     .9,//((centerX - fObjectOffsetX) - transform.x) / transform.scale, 
-    //     ((centerY - fObjextOffsetY) - transform.y) / transform.scale, 
-    //     (x2 - transform.x) / transform.scale, 
-    //     ((y2 - 50) - transform.y) / transform.scale, 
-    //     .5
-    // );
-
-    //console.log(center.x, center.y);
-
-    //console.log(getQuadraticCurvePoint(x1, y1, .675, .675, x2, y2, .5));
-
     let bezier = getBezierPath(
         (x1 - transform.x) / transform.scale,
         (y1 - transform.y) / transform.scale,
@@ -588,11 +553,6 @@ const applyLinkPosition = (api: FlowTypes.Api, link: FlowTypes.Link) => {
     link.band1.setAttribute('d', bezier);
     link.band2.setAttribute('d', bezier);
     link.band3.setAttribute('d', bezier);
-    //link.labelEl.setAttribute('d', bezier);
-    //console.log(link.innerEl.getBBox());
-    // link.fObject.setAttribute('x', center.x + 'px');
-    // link.fObject.setAttribute('Y', center.y + 'px');
-    // link.fObject.style.transform = `translate(${center.x}px, ${center.y}px)`;
 }
 
 const applyAllLinkPositions = (api: FlowTypes.Api) => {

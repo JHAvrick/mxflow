@@ -19,8 +19,6 @@ const babelOptions = {
     ]
 };
 
-console.log(process.env.NODE_ENV);
-
 if (process.env.NODE_ENV === 'development' ? 'eval-source-map' : false)
 
 module.exports = {

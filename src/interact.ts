@@ -83,6 +83,13 @@ const InteractionEmitter = (api: FlowTypes.Api, methods: FlowTypes.Methods) => {
         
         /**
          * Handle drag start, but not latch
+         * 
+         * TODO: Need a check here for a "user content" sort of section where dragging doesn't take place,
+         * something like !(<HTMLElement> e.target).hasAttribute(FlowTypes.FlowAttr.NodeContent) except needs to 
+         * account for child elements.
+         * 
+         * Also, not here, but we may want something similar for the context menu so that users can select text, etc.
+         * 
          */
         if (e.isPrimary){
             drag.startEvent = e;

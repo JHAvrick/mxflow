@@ -6,11 +6,18 @@ import { getPublicInterface } from '../methods';
  * Drag node tool
  */
 function MXFlowContextTool(api: FlowTypes.Api, methods: ReturnType<typeof getPublicInterface>, interactions: InteractTypes.InteractionEmitter) : FlowTypes.ActionHandler {
-    const handleDown = () => methods.closeContextMenu();
+    
+    const handleDown = (e: InteractTypes.MXPointerEvent) => {
+        if (e.source.target && e.source.target instanceof HTMLElement){
+            if (e.source.target === api.dom.contextEl || api.dom.contextEl.contains(e.source.target)) return;
+            methods.closeContextMenu();
+        }
+    };
+
     const handleWheel = () =>  methods.closeContextMenu();
     const handleContext = (e: InteractTypes.MXContextMenuEvent) => {
         if (e.item){
-            let x, y; [x,y] = methods.pageToContainerPos(e.source.pageX, e.source.pageY);
+            let [x,y] = methods.pageToContainerPos(e.source.pageX, e.source.pageY);
             methods.openContextMenu(x, y, e.item);
         }
     }

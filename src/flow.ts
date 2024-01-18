@@ -11,6 +11,7 @@ import MXFlowContextTool from './systems/context';
 import MXFlowShortcutTool from './systems/shortcut';
 import InteractionEmitter from './interact';
 
+//Creates internal state structure, passed to the various systems
 const getMXFlowState = (dom: FlowTypes.FlowDom) : FlowTypes.FlowState => {
     return {
         root: {
@@ -34,6 +35,7 @@ const getMXFlowState = (dom: FlowTypes.FlowDom) : FlowTypes.FlowState => {
     }
 }
 
+//Default options, must include ALL possible options as it is deep-merged w/ user options on init
 const DefaultOpts: FlowTypes.Options = {
     nodeHTMLTemplate: DefaultNodeTemplate,
     width: 5000,
@@ -42,6 +44,7 @@ const DefaultOpts: FlowTypes.Options = {
     showGrid: true,
     gridSize: 32,
     bezierWeight: 0.675,
+    linkValidator: () => true,
     beforeLinkStart: () => true,
     beforeLinkEnd: () => true,
     beforeNodeRemoved: () => true,
@@ -67,7 +70,7 @@ const DefaultOpts: FlowTypes.Options = {
     },
     undo: {
         enabled: true,
-        max: 50,
+        max: Infinity,
         actions: [
             'drag',
             'addEdge',
@@ -109,6 +112,12 @@ const DefaultOpts: FlowTypes.Options = {
     }
 }
 
+/**
+ * Flattens and merges the user options with the default options, ensuring that all options are present.
+ * 
+ * @param opts 
+ * @returns 
+ */
 const mergeDefaultOpts = (opts: FlowTypes.Options) : FlowTypes.Config => {
     let merged = {};
     let defaultFlat = flatten(DefaultOpts);
@@ -122,7 +131,7 @@ function MXFlowController(targetEl: HTMLElement, options: FlowTypes.Options){
     let opts = mergeDefaultOpts(options); //merge({}, DefaultOpts, options);
     const dom = generateFlowEl(targetEl, opts);
     const state = getMXFlowState(dom);
-    const events = new EventEmitter();
+    const events = new EventEmitter();``
     const tools = new Map<string, FlowTypes.ActionHandler>();
     const renderCache = new Map<string, Element | null>();
 
@@ -147,11 +156,21 @@ function MXFlowController(targetEl: HTMLElement, options: FlowTypes.Options){
     const interactions = InteractionEmitter(api, methods);
 
     /**
-     * Creates new option set and notifies all subsystems to update state
+     * Creates new option set and notifies all subsystems to update state\
+     * 
+     * TODO: There are many options which are difficult to change at runtime, will need to consider 
+     * whether this method is feasible. For now, individual setters are provided for some options.
+     * 
      * @param options 
      */
-    const setOptions = (options: FlowTypes.Options) => {
-        opts = mergeDefaultOpts(options); //merge({}, DefaultOpts, options);
+    // const setOptions = (options: FlowTypes.Options) => {
+    //     opts = mergeDefaultOpts(options); //merge({}, DefaultOpts, options);
+    //     api.opts = opts;
+    //     tools.forEach(tool => tool.update?.(api));
+    // }
+
+    const setDragOptions = (grid: FlowTypes.DragOptions) => {
+        opts.drag = { ...opts.drag, ...grid };
         api.opts = opts;
         tools.forEach(tool => tool.update?.(api));
     }
@@ -188,7 +207,7 @@ function MXFlowController(targetEl: HTMLElement, options: FlowTypes.Options){
             events.removeListener(type, listener);
         },
         dispose,
-        setOptions,
+        setDragOptions,
         cancel,
         ...methods
     }

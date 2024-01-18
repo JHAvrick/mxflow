@@ -71,17 +71,9 @@ function MXFlowLassoTool(api: FlowTypes.Api, methods: ReturnType<typeof getPubli
         dom.lassoEl.style.display = 'none';
         dom.lassoEl.setAttribute('width', '0px');
         dom.lassoEl.setAttribute('height', '0px');
-        // dom.lassoEl!.style.width = '0px';
-        // dom.lassoEl!.style.height = '0px'
 
         //Emit events
         methods.setSelected(new Map(state.preselected));
-
-        // //If any items were preselected, record action
-        // if (state.preselected.size > 0){
-        //     console.log(1);
-        //     methods.recordAction(FlowTypes.ActionTypes.SELECT);
-        // }
 
         //Clear preselection and unlock api
         methods.setPreselected(new Map());

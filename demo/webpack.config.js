@@ -18,7 +18,6 @@ const babelOptions = {
     ]
 };
 
-console.log(__dirname);
 module.exports = {
     entry: './demo/src/index.ts',
     mode: 'development',
@@ -95,6 +94,6 @@ module.exports = {
             title: 'mxflow',
             realContentHash: false
         }),
-        new CleanWebpackPlugin()
+        //new CleanWebpackPlugin()
     ]
 }

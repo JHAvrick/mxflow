@@ -29,7 +29,6 @@ const getPublicInterface = (api: FlowTypes.Api) => {
     }
 
     const recordAction = (action: FlowTypes.ActionType) => {
-        console.log(action);
         if (!api.opts.undo?.enabled) return;
         if (api.opts.undo?.actions?.includes(action)){
             state.undo.unshift({
@@ -37,7 +36,7 @@ const getPublicInterface = (api: FlowTypes.Api) => {
                 model: getModel()
             });
 
-            if (state.undo.length > 50){
+            if (state.undo.length > api.opts.undo.max){
                 state.undo.pop();
             }
             /**
@@ -201,8 +200,8 @@ const getPublicInterface = (api: FlowTypes.Api) => {
      * 
      * @param opts.suppressEvent - When set to true, no event will be emitted for this action
      * @param opts.ignoreAction - When set to true, no action will be added to the do/undo stack
-     */
-    const removedSelectedItems = (opts?: FlowTypes.ActionExtendedOpts) => {
+     */1
+    const removeSelectedItems = (opts?: FlowTypes.ActionExtendedOpts) => {
         /**
          * If the selection size is greater than one, we want to ignore the individual remove 
          * actions and record the batch action once each operation is complete.
@@ -308,8 +307,18 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         let edge = state.edges.get(key);
         if (edge){
             if (api.opts.beforeEdgeRemoved && !api.opts.beforeEdgeRemoved(edge)) return;
+
+            //Remove any links associated with this edge and batch this action in w/ the edge removal
+            state.links.forEach(link => {
+                if ((link.fromNode === edge?.nodeKey && link.fromEdge === edge?.edgeKey) || (link.toNode === edge?.nodeKey && link.toEdge === edge?.edgeKey)){
+                    removeLink(link.key, { suppressEvent: opts?.suppressEvent, ignoreAction: true });
+                }
+            });
+
             edge.el.remove();
             state.edges.delete(key);
+
+            FlowUtil.applyAllLinkPositions(api);
 
             if (!opts?.suppressEvent) emit('edgeRemoved', edge);
             if (!opts?.ignoreAction) recordAction('removeEdge');
@@ -335,7 +344,6 @@ const getPublicInterface = (api: FlowTypes.Api) => {
 
     const addNode = (nodeKey: string, options: FlowTypes.AddNodeOptions = {}) => {
         let opts = { ...AddNodeDefaultOpts, ...options };
-        console.log(api.opts.nodeHTMLTemplate);
         if (!state.nodes.has(nodeKey)){
             let node = FlowUtil.createNode({
                 template: api.opts.nodeHTMLTemplate,
@@ -516,10 +524,10 @@ const getPublicInterface = (api: FlowTypes.Api) => {
     }
 
     const openContextMenu = (graphX: number, graphY: number, target: FlowTypes.FlowItem, opts?: { suppressEvent: boolean }) => {
-        renderContext(target);
-        dom.contextEl.style.left = `${graphX}px`;
-        dom.contextEl.style.top = `${graphY}px`;
-        dom.contextEl.style.display = 'block';
+        renderContext(target, graphX, graphY);
+        // dom.contextEl.style.left = `${graphX}px`;
+        // dom.contextEl.style.top = `${graphY}px`;
+        // dom.contextEl.style.display = 'block';
         state.contextOpen = true;
         if (!opts?.suppressEvent){
             emit('contextOpened', target);
@@ -575,7 +583,8 @@ const getPublicInterface = (api: FlowTypes.Api) => {
                 nodeKey: edge.nodeKey,
                 edgeKey: edge.edgeKey,
                 groupKey: edge.group.groupKey,
-                data: edge.data
+                data: edge.data,
+                class: edge.class
             }
         })
 
@@ -623,7 +632,11 @@ const getPublicInterface = (api: FlowTypes.Api) => {
                 entry[1].groupKey, 
                 entry[1].nodeKey, 
                 entry[1].edgeKey,
-                { ignoreAction: true }
+                { 
+                    ignoreAction: true,
+                    data: entry[1].data,
+                    class: entry[1].class
+                }
             )
         })
 
@@ -706,9 +719,9 @@ const getPublicInterface = (api: FlowTypes.Api) => {
      * 
      * @param item 
      */
-    const renderContext = (item: FlowTypes.FlowItem) => {
+    const renderContext = (item: FlowTypes.FlowItem, graphX: number, graphY: number) => {
         let renderTarget = dom.contextEl;
-        let nextContent = api.opts.renderContext?.(item);
+        let nextContent = api.opts.renderContext?.(item, graphX, graphY);
         if (nextContent){
             renderTarget.innerHTML = '';
             if (typeof nextContent === 'string'){
@@ -717,6 +730,10 @@ const getPublicInterface = (api: FlowTypes.Api) => {
                 renderTarget.appendChild(nextContent);
             }
         }
+
+        dom.contextEl.style.left = `${graphX}px`;
+        dom.contextEl.style.top = `${graphY}px`;
+        dom.contextEl.style.display = 'block';
     }
 
     const applyTransform = (transition: boolean | number = false) => {
@@ -877,7 +894,7 @@ const getPublicInterface = (api: FlowTypes.Api) => {
         addToSelection,
         removeFromSelection,
         removeItem,
-        removedSelectedItems,
+        removeSelectedItems,
         openContextMenu,
         closeContextMenu,
         getItem,
