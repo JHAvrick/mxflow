@@ -5,8 +5,8 @@
     display: flex;
     justify-content: space-between;
     align-items: stretch;
-    /* -webkit-box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
-    box-shadow: 0 .125rem .25rem rgba(0,0,0,.075); */
+    -webkit-box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+    box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
 }
 
 /**
@@ -29,7 +29,7 @@
  * Applied specifically to input edge list
  */
 .mxflow-edge-group[data-mxflow-edge-group="inputs"] {
-    top: 0;
+    top: 10px;
     left: 0;
 }
 
@@ -37,7 +37,7 @@
  * Applied specifically to output edge list
  */
  .mxflow-edge-group[data-mxflow-edge-group="outputs"] {
-    top: 0;
+    top: 10px;
     right: 0;
 }
 

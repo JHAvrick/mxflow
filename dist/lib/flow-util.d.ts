@@ -5,7 +5,7 @@ import * as FlowTypes from 'types/flow.types.v2';
  * See https://codepen.io/GrinninColossus/pen/PopzzNE?editors=1010
  */
 declare const getBezierPath: (x1: number, y1: number, x2: number, y2: number, weight: number) => string;
-declare const swapValues: (var1: any, var2: any) => any[];
+declare const swapValues: <T>(var1: T, var2: T) => [T, T];
 /**
  * Clone simpe objects
  */
@@ -63,6 +63,7 @@ declare type rect = {
  * @returns
  */
 declare const intersectRect: (r1: rect, r2: rect) => boolean;
+declare const DefaultNodeTemplate: string;
 declare const parseNodeTemplate: (template: string) => [Document, HTMLElement, HTMLElement];
 declare type CreateNodeOptions = {
     template?: string;
@@ -72,7 +73,7 @@ declare type CreateNodeOptions = {
     z: number;
     width?: string | number;
     height?: string | number;
-    nodeClass?: string;
+    nodeClass?: string | string[];
     data?: FlowTypes.Serializable;
 };
 declare const createNode: (opts: CreateNodeOptions) => FlowTypes.Node;
@@ -98,6 +99,7 @@ declare const generateFlowEl: (targetEl: HTMLElement, opts: FlowTypes.Config) =>
     lassoEl: SVGElement;
     contextEl: HTMLDivElement;
     rootEl: HTMLDivElement;
+    bgEl: HTMLDivElement;
     nodeContainerEl: HTMLDivElement;
     linkContainerEl: SVGElement;
     ghostLinkContainerEl: SVGElement;
@@ -108,4 +110,4 @@ declare const removeItemClass: (item: FlowTypes.FlowItem | FlowTypes.FlowItem[] 
 declare const applyNodePosition: (node: FlowTypes.Node) => FlowTypes.Node;
 declare const applyLinkPosition: (api: FlowTypes.Api, link: FlowTypes.Link) => void;
 declare const applyAllLinkPositions: (api: FlowTypes.Api) => void;
-export { swapValues, clone, clamp, distance, midpoint, throttle, flatten, resolveProperty, assignProperty, getBezierPath, intersectRect, parseNodeTemplate, createNode, getEdgeCompositeKey, getLinkCompositeKey, createEdge, getEdgeLatchPos, createLink, generateFlowEl, addItemClass, removeItemClass, applyNodePosition, applyLinkPosition, applyAllLinkPositions };
+export { swapValues, clone, clamp, distance, midpoint, throttle, flatten, resolveProperty, assignProperty, getBezierPath, intersectRect, DefaultNodeTemplate, parseNodeTemplate, createNode, getEdgeCompositeKey, getLinkCompositeKey, createEdge, getEdgeLatchPos, createLink, generateFlowEl, addItemClass, removeItemClass, applyNodePosition, applyLinkPosition, applyAllLinkPositions };

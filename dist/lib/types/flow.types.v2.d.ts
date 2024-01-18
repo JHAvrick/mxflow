@@ -15,6 +15,7 @@ interface FlowDom {
     lassoEl: SVGElement;
     contextEl: HTMLDivElement;
     rootEl: HTMLDivElement;
+    bgEl: HTMLDivElement;
     nodeContainerEl: HTMLDivElement;
     linkContainerEl: SVGElement;
     ghostLinkContainerEl: SVGElement;
@@ -64,6 +65,7 @@ interface NodeModel {
     y: number;
     width: number | string;
     height: number | string;
+    class: string[];
     data: Serializable;
 }
 interface EdgeModel {
@@ -71,6 +73,7 @@ interface EdgeModel {
     edgeKey: string;
     groupKey: string;
     data: Serializable;
+    class: string;
 }
 interface LinkModel {
     selected: boolean;
@@ -144,9 +147,13 @@ interface Node {
      * Container for any user-attached data for this node
      */
     data: Serializable;
+    /**
+     * User classes
+     */
+    class: string[];
 }
 declare type AddNodeOptions = {
-    class?: string;
+    class?: string | string[];
     data?: Serializable;
     width?: string | number;
     height?: string | number;
@@ -182,6 +189,7 @@ interface Edge {
     edgeKey: string;
     el: HTMLElement;
     data: Serializable;
+    class: string;
 }
 declare type AddEdgeOptions = {
     data?: Serializable;
@@ -427,6 +435,10 @@ interface BackgroundOptions {
      * type is not set to `custom`.
      */
     html?: string;
+    /**
+     * If type is set to `dots`, this value defines the size of the dots.
+     */
+    radius?: number;
 }
 interface ControlOptions {
     panButton?: 0 | 1 | 2;
@@ -526,7 +538,7 @@ interface Options {
     /**
      * The render method for the context menu.
      */
-    renderContext?: (item: FlowItem) => Element | string | void;
+    renderContext?: (item: FlowItem, graphX: number, graphY: number) => Element | string | void;
     /**
      * Custom link validator. This validator will be called repeatedly when a "linking"
      * operation is occurring and then once before a final link is formed. Don't perform any
@@ -640,4 +652,4 @@ interface InteractionEventMap {
     'keyup': InteractionEvent;
     'wheel': InteractionEvent;
 }
-export { Action, ActionExtendedOpts, ActionHandler, ActionType, ActionTypes, AddNodeOptions, AddEdgeOptions, AddLinkOptions, Methods, Api, ContentModelItem, CreateLinkParams, Edge, EdgeGroup, EdgeModel, FlowDom, FlowEventMap, FlowInternalApi, FlowItem, FlowAttr, FlowClass, FlowItemType, FlowState, GhostLink, Graph, Link, LinkModel, LinkLatchPosition, LinkState, Model, Node, NodeModel, Options, Config, PanZoomOptions, Rect, RenderableType, SelectableItem, SelectOptions, Transform, TransformModel, RenderableItem, InteractionEvent, InteractionEventMap, Serializable, SetViewOptions, NoOptionals, ControlOptions };
+export { Action, ActionExtendedOpts, ActionHandler, ActionType, ActionTypes, AddNodeOptions, AddEdgeOptions, AddLinkOptions, Methods, Api, ContentModelItem, CreateLinkParams, Edge, EdgeGroup, EdgeModel, FlowDom, FlowEventMap, FlowInternalApi, FlowItem, FlowAttr, FlowClass, FlowItemType, FlowState, GhostLink, Graph, Link, LinkModel, LinkLatchPosition, LinkState, Model, Node, NodeModel, Options, Config, PanZoomOptions, Rect, RenderableType, SelectableItem, SelectOptions, Transform, TransformModel, RenderableItem, InteractionEvent, InteractionEventMap, Serializable, SetViewOptions, NoOptionals, ControlOptions, DragOptions };

@@ -322,8 +322,6 @@ enum FlowClass {
     Lasso = 'mxflow-lasso',
     Links = 'mxlflow-links',
     Link = 'mxflow-link',
-    // LinkInner = 'mxflow-link-inner',
-    // LinkOuter = 'mxflow-link-outer',
     LinkBand1 = 'mxflow-link-band1',
     LinkBand2 = 'mxflow-link-band2',
     LinkBand3 = 'mxflow-link-band3',

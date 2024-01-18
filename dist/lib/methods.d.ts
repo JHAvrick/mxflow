@@ -17,7 +17,7 @@ declare const getPublicInterface: (api: FlowTypes.Api) => {
     addToSelection: (items: FlowTypes.SelectableItem[], opts?: FlowTypes.ActionExtendedOpts | undefined) => void;
     removeFromSelection: (keys: string[], opts?: FlowTypes.ActionExtendedOpts | undefined) => void;
     removeItem: (type: FlowTypes.FlowItemType, key: string, opts?: FlowTypes.ActionExtendedOpts | undefined) => void;
-    removedSelectedItems: (opts?: FlowTypes.ActionExtendedOpts | undefined) => void;
+    removeSelectedItems: (opts?: FlowTypes.ActionExtendedOpts | undefined) => void;
     openContextMenu: (graphX: number, graphY: number, target: FlowTypes.FlowItem, opts?: {
         suppressEvent: boolean;
     } | undefined) => void;
@@ -48,5 +48,6 @@ declare const getPublicInterface: (api: FlowTypes.Api) => {
         [key: string]: any;
     }) => void;
     getCompositeScale: () => number;
+    setBackground: (html: string) => void;
 };
 export { getPublicInterface, FlowMethods };

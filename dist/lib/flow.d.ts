@@ -17,7 +17,7 @@ declare function MXFlowController(targetEl: HTMLElement, options: FlowTypes.Opti
     readonly addToSelection: (items: FlowTypes.SelectableItem[], opts?: FlowTypes.ActionExtendedOpts | undefined) => void;
     readonly removeFromSelection: (keys: string[], opts?: FlowTypes.ActionExtendedOpts | undefined) => void;
     readonly removeItem: (type: FlowTypes.FlowItemType, key: string, opts?: FlowTypes.ActionExtendedOpts | undefined) => void;
-    readonly removedSelectedItems: (opts?: FlowTypes.ActionExtendedOpts | undefined) => void;
+    readonly removeSelectedItems: (opts?: FlowTypes.ActionExtendedOpts | undefined) => void;
     readonly openContextMenu: (graphX: number, graphY: number, target: FlowTypes.FlowItem, opts?: {
         suppressEvent: boolean;
     } | undefined) => void;
@@ -48,10 +48,11 @@ declare function MXFlowController(targetEl: HTMLElement, options: FlowTypes.Opti
         [key: string]: any;
     }) => void;
     readonly getCompositeScale: () => number;
+    readonly setBackground: (html: string) => void;
     readonly on: <K extends keyof FlowTypes.FlowEventMap>(type: K, listener: (event: FlowTypes.FlowEventMap[K]) => any) => void;
     readonly removeListener: <K_1 extends keyof FlowTypes.FlowEventMap>(type: K_1, listener: Listener) => void;
     readonly dispose: () => void;
-    readonly setOptions: (options: FlowTypes.Options) => void;
+    readonly setDragOptions: (grid: FlowTypes.DragOptions) => void;
     readonly cancel: () => void;
 };
 declare type MXFlowControllerInstance = ReturnType<typeof MXFlowController>;
