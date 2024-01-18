@@ -30,8 +30,8 @@ Below are some examples gifs, but you can also just try the demo.
 ## Link Nodes
 ![link](link.gif)
 
-## Undo
-![undo](undo.gif)
-
 ## Lasso
 ![lasso](lasso.gif)
+
+## Undo
+![undo](undo.gif)
