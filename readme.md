@@ -4,8 +4,8 @@ This project is a proof-of-concept for a node-graph editor in vanilla TypeScript
 
 [Try the Demo](https://jhavrick.github.io/mxflow/) \
 [GIF Previews](#previews) \
-[Basic Example](#example) 
-<!-- [API Documentation](#api-documentation) -->
+[Basic Example](#example) \
+[API Documentation](/api.md)
 
 MXFlow currently supports the following features:
  - Custom Nodes, Edges, Links
