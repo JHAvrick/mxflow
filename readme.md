@@ -1,6 +1,5 @@
-# MXflow
-
-This project is a proof-of-concept for a node-graph editor in vanilla TypeScript with component-based framework integrations in mind. This is really just a showcase and is not intended or sufficient for production use cases.
+# MXFlow
+This project is a proof-of-concept node-graph editor written in vanilla TypeScript. This is really just a showcase and is not intended, or sufficient, for production use. This project was written with component framework integration in mind.
 
 [Try the Demo](https://jhavrick.github.io/mxflow/) \
 [GIF Previews](#previews) \
@@ -96,7 +95,7 @@ if (root){
 
 ### Adding a Node
 
-Then we can programmatically add a node. It's usually a good idea to size your nodes as increments of the grid size, if applicable. Note that when we add edges we must specify a grouping. These groups are defined in the node template and are not necessarily restricted to just inputs and outputs.
+Then we can programmatically add a node. It's usually a good idea to size your nodes in increments of the grid size. Note that when we add edges we must specify a grouping. These groups are defined in the node template and are not necessarily restricted to just inputs and outputs.
 
 ```typescript
 mxflow.addNode('key', { 
