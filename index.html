@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MXFlow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <style>
+        * {
+            box-sizing: border-box;;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .mxflow-node-header {
+            padding: 8px 14px;
+            background: #ffffff12;
+        }
+
+        .mxflow-node-body {
+            padding: 50px;
+        }
+
+        .mxflow-context-btn {
+            color: white;
+            background: transparent;
+            outline: none;
+            border: none;
+            padding: 0px;
+            margin: 0;
+        }
+
+        .mxflow-edge.edge-cyan {
+            background: #00ffea3f;
+            color: #00c6ff;
+        }
+
+        .mxflow-edge.edge-violet {
+            background: #ff00e93f;
+            color: #ff00c6;
+        }
+
+        .mxflow-edge.edge-green {
+            background: #00ff003f;
+            color: #00ff00;
+        }
+
+        .mxflow-edge.edge-blue {
+            background: #00c6ff3f;
+            color: #00c6ff;
+        }
+
+        .mxflow-edge.edge-orange {
+            background: #ff9e003f;
+            color: #ff9e00;
+        }
+
+        .controls-dialog {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.212);
+            padding: 25px;
+            z-index: 1;
+            color: white;
+        }
+
+    </style>
+<script defer src="demo.js"></script></head>
+<body>
+    <div id="root" style="width:100vw; height:100vh; overflow:hidden;"></div>
+    <div class="controls-dialog">
+        <p> <strong>Drag:</strong>  Pan </p>
+        <p> <strong>Wheel:</strong> Zoom </p>
+        <p> <strong>Click:</strong> Select </p>
+        <p> <strong>Shift+Mouse:</strong> Multi Select </p>
+        <p> <strong>Ctrl+Mouse:</strong> Lasso Select </p>
+        <p> <strong>Delete:</strong> Delete Node, Edge, or Link </p>
+        <p> <strong>Right Click:</strong> Context Menu </p>
+    </div>
+</body>
+</html>
