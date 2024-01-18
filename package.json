@@ -5,6 +5,7 @@
   "scripts": {
     "demo": "cross-env NODE_ENV=development webpack-dev-server --config ./demo/webpack.config.js",
     "demo:build": "cross-env NODE_ENV=production webpack --config ./demo/webpack.config.js",
+    "demo:deply": "npm run demo:build && node gh-pages-deploy.js",
     "dev": "cross-env NODE_ENV=development webpack -w --stats-error-details",
     "build": "cross-env NODE_ENV=production webpack -w --stats-error-details",
     "_build": "ts-node -r tsconfig-paths/register ./src/index.ts",

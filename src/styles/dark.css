@@ -12,6 +12,7 @@
  */
 .mxflow-container {
     background: #141b2d;
+    user-select: none;
 }
 
 .mxflow-root--panning {
