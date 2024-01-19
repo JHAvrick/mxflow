@@ -55,5 +55,5 @@ declare function MXFlowController(targetEl: HTMLElement, options: FlowTypes.Opti
     readonly setDragOptions: (grid: FlowTypes.DragOptions) => void;
     readonly cancel: () => void;
 };
-declare type MXFlowControllerInstance = ReturnType<typeof MXFlowController>;
+type MXFlowControllerInstance = ReturnType<typeof MXFlowController>;
 export { MXFlowController, MXFlowControllerInstance };

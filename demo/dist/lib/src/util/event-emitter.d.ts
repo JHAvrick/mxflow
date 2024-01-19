@@ -1,4 +1,4 @@
-declare type Listener = (...args: any[]) => void;
+type Listener = (...args: any[]) => void;
 declare class EventEmitter {
     private readonly events;
     on(event: string, listener: Listener): () => void;

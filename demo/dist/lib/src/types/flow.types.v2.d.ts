@@ -1,6 +1,6 @@
 import { MXFlowControllerInstance } from "../flow";
 import { getPublicInterface } from '../methods';
-declare type NoOptionals<T> = {
+type NoOptionals<T> = {
     [P in keyof T]-?: T[P];
 };
 interface Rect {
@@ -95,7 +95,7 @@ interface Model {
         [key: string]: LinkModel;
     };
 }
-declare type ContentModelItem = NodeModel | EdgeModel;
+type ContentModelItem = NodeModel | EdgeModel;
 interface Serializable {
     [key: string]: string | number | boolean | null | undefined | Serializable;
 }
@@ -152,7 +152,7 @@ interface Node {
      */
     class: string[];
 }
-declare type AddNodeOptions = {
+type AddNodeOptions = {
     class?: string | string[];
     data?: Serializable;
     width?: string | number;
@@ -191,7 +191,7 @@ interface Edge {
     data: Serializable;
     class: string;
 }
-declare type AddEdgeOptions = {
+type AddEdgeOptions = {
     data?: Serializable;
     class?: string;
 } & ActionExtendedOpts;
@@ -209,7 +209,7 @@ interface Link {
     labelEl: SVGTextPathElement;
     data: Serializable;
 }
-declare type AddLinkOptions = {
+type AddLinkOptions = {
     class?: string;
     data?: Serializable;
 } & ActionExtendedOpts;
@@ -231,20 +231,20 @@ interface CreateLinkParams {
 /**
  * Graph entities
  */
-declare type FlowItem = Graph | Node | Edge | Link;
+type FlowItem = Graph | Node | Edge | Link;
 /**
  * Valid items for selection
  */
-declare type SelectableItem = Node | Link;
+type SelectableItem = Node | Link;
 /**
  * Valid target items for context menu
  */
-declare type ContextTargetItem = Graph | Node | Edge | Link;
+type ContextTargetItem = Graph | Node | Edge | Link;
 /**
  * Item types which have a renderable content section
  */
-declare type RenderableType = 'node' | 'edge';
-declare type RenderableItem = Node | Edge;
+type RenderableType = 'node' | 'edge';
+type RenderableItem = Node | Edge;
 declare enum FlowItemType {
     None = "none",
     Graph = "graph",
@@ -305,7 +305,7 @@ interface Transform {
  * Persistable action types used for do/undo. These types are used to
  * define which actions should be recorded in the main options.
  */
-declare type ActionType = typeof ActionTypes[keyof typeof ActionTypes];
+type ActionType = typeof ActionTypes[keyof typeof ActionTypes];
 declare const ActionTypes: {
     readonly TRANSFORM: "transform";
     readonly SELECT: "select";
@@ -457,7 +457,7 @@ interface ControlOptions {
 /**
  * Main options
  */
-declare type Config = NoOptionals<Options> & {
+type Config = NoOptionals<Options> & {
     drag?: NoOptionals<DragOptions>;
     select?: NoOptionals<SelectOptions>;
     undo?: NoOptionals<UndoOptions>;
@@ -580,7 +580,7 @@ interface ActionHandler {
 /**
  * Internal graph API passed to subsystems, etc.
  */
-declare type Methods = ReturnType<typeof getPublicInterface>;
+type Methods = ReturnType<typeof getPublicInterface>;
 interface Api {
     opts: Config;
     dom: FlowDom;
@@ -625,14 +625,14 @@ interface ActionExtendedOpts {
      */
     ignoreAction?: boolean;
 }
-declare type SetViewOptions = {
+type SetViewOptions = {
     x?: number;
     y?: number;
     scale?: number;
     scaleSteps?: number;
     transition?: boolean | number;
 } & ActionExtendedOpts;
-declare type InteractionEvent = {
+type InteractionEvent = {
     type: keyof InteractionEventMap;
     item: FlowItem | undefined;
     graphX: number;

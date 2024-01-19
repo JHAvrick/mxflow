@@ -7,5 +7,5 @@
  * @param radius - If `type=dots`, the radius of each individual dot
  * @returns
  */
-declare const generateBackground: (type: 'grid' | 'dots', size?: number | undefined, radius?: number | undefined) => string;
+declare const generateBackground: (type: 'grid' | 'dots', size?: number, radius?: number) => string;
 export default generateBackground;

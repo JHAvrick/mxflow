@@ -51,8 +51,8 @@ interface InteractEventMap {
     'keyup': MXKeyboardEvent;
     'contextmenu': MXContextMenuEvent;
 }
-declare type InteractionEmitter = ReturnType<typeof InteractionEmitter>;
-declare type Modifiers = {
+type InteractionEmitter = ReturnType<typeof InteractionEmitter>;
+type Modifiers = {
     'ctrl': boolean;
     'shift': boolean;
 };

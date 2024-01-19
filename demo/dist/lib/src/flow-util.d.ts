@@ -49,7 +49,7 @@ declare const assignProperty: (path: string, obj: {
     [key: string]: any;
     [key: number]: any;
 }, val: any) => void;
-declare type rect = {
+type rect = {
     left: number;
     right: number;
     top: number;
@@ -63,9 +63,9 @@ declare type rect = {
  * @returns
  */
 declare const intersectRect: (r1: rect, r2: rect) => boolean;
-declare const DefaultNodeTemplate: string;
+declare const DefaultNodeTemplate = "\n    <div data-mxflow-node-template>\n        <ul data-mxflow-edge-group=\"inputs\" data-mxflow-edge-latch=\"center\">\n            <!-- Input Edges Dynamically Populated -->\n        </ul>\n        <div data-mxflow-node-content>\n            <!-- Node Content as Provided by User -->\n        </div>\n        <ul data-mxflow-edge-group=\"outputs\" data-mxflow-edge-latch=\"center\">\n            <!-- Output Edges Dynamically Populated -->\n        </ul>\n    </div>\n";
 declare const parseNodeTemplate: (template: string) => [Document, HTMLElement, HTMLElement];
-declare type CreateNodeOptions = {
+type CreateNodeOptions = {
     template?: string;
     key: string;
     x: number;
@@ -78,7 +78,7 @@ declare type CreateNodeOptions = {
 };
 declare const createNode: (opts: CreateNodeOptions) => FlowTypes.Node;
 declare const getEdgeCompositeKey: (edge: FlowTypes.Edge) => string;
-declare const createEdge: (node: FlowTypes.Node, groupKey: string, edgeKey: string, edgeClass?: string | undefined) => FlowTypes.Edge;
+declare const createEdge: (node: FlowTypes.Node, groupKey: string, edgeKey: string, edgeClass?: string) => FlowTypes.Edge;
 /**
  * Given an edge, returns it's latch position as defined by its edge group.
  *
@@ -92,7 +92,7 @@ declare const getEdgeLatchPos: (edge: FlowTypes.Edge, offsetX?: number, offsetY?
     y: number;
 };
 declare const getLinkCompositeKey: (opts: FlowTypes.CreateLinkParams) => string;
-declare const createLink: (opts: FlowTypes.CreateLinkParams, groupClass?: string | undefined) => FlowTypes.Link;
+declare const createLink: (opts: FlowTypes.CreateLinkParams, groupClass?: string) => FlowTypes.Link;
 declare const generateFlowEl: (targetEl: HTMLElement, opts: FlowTypes.Config) => {
     instanceId: string;
     containerEl: HTMLDivElement;
