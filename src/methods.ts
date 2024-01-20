@@ -43,6 +43,10 @@ const getPublicInterface = (api: FlowTypes.Api) => {
              * Clear redo stack any time a new action was recorded
              */
             state.redo = [];
+            /**
+             * Emit action event.
+             */
+            api.emit('action', state.undo);
         }
     }
 

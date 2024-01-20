@@ -1,8 +1,9 @@
 # MXFlow
 This project is a proof-of-concept node-graph editor written in vanilla TypeScript. This is really just a showcase and is not intended, or sufficient, for production use. This project was written with component framework integration in mind.
 
-[Try the Demo](https://jhavrick.github.io/mxflow/) \
-[GIF Previews](#previews) \
+![promo](promo.png)
+
+[Demo](https://jhavrick.github.io/mxflow/) \
 [Basic Example](#example) \
 [API Documentation](/api.md)
 
@@ -31,7 +32,7 @@ Of course, if you're looking for an actual solution there really isn't a better 
 
 ### Node Template
 
- First define a node template. This is just the "scaffolding" used for each node. Multiple templates canbe used at once. The node's content is provided in a `render` method which is provided in the config.
+ First define a node template. This is just the "scaffolding" used for each node. Multiple templates can be used at once. The node's content is provided in a `render` method which is provided in the config.
 
 ```html
 <div data-mxflow-node-template>
@@ -46,32 +47,50 @@ Of course, if you're looking for an actual solution there really isn't a better 
     </ul>
 </div>
 ```
-These data attributes tell MXFlow which area of the node is being scaffolded. The available data attributes can be found on the `FlowAttr` enum.
+The data attributes applied to each element tell MXFlow which area of the node is being scaffolded. This information is used internally to determine where certain elements are found. The available / necessary data attributes can be found on the `FlowAttr` enum.
 
 ### MXFlow Instance
 
-Next we can define out instance with minimal configuration. See the `Options` type for complete list of documented options.
+Next we can define our instance with a minimal configuration object. See the `Options` type for complete list of documented options.
 
 ```typescript
 let root = document.getElementById('root');
 if (root){
     const mxflow = MXFlowController(root, {
+        nodeHTMLTemplate: template, //As defined above
+        /**
+         * The width/height define the size of the graph, but the size of your root element determines the
+         * size of the viewport.
+         */ 
         width: 5000,
         height: 2500,
-        nodeHTMLTemplate: template, //As defined above
+        /**
+         * Describe the background pattern. Custom patterns can be provided through the API.
+         */ 
         background: {
             type: 'grid',
             radius: 1.5,
             size: 32
         },
+        /**
+         * Define our min/max zoom as well as zoom step.
+         */ 
         panzoom: {
             minScale: .25,
             scaleStep: .1
         },
+        /**
+         * Return whatever content you'd like to be in the context menu depending on
+         * what graph element is targeted (node, edge, link, graph).
+         */ 
         renderContext: (item, x, y) => {
-            //You can build any context menu here
             return `Target: ${item.type}`;
         },
+        /**
+         * Render the actual content for each node or edge. This content is cached, so unless a node's 
+         * content needs to be re-rendered, you can simply return the existing content or a modified version. 
+         * You can return an HTML string or an HTMLElement here.
+         */ 
         render: (item, content, data) => {
             //We only need to generate content for un-rendered items
             if (content) return content; 
@@ -111,13 +130,8 @@ mxflow.addNode('key', {
     ]
 })
 ```
-<!-- 
-# API Documentation
- -->
 
-
-
-# Previews
+<!-- # Previews
 
 ### Link Nodes
 Nodes are linked by dragging from one edge to another. In this example, custom link validation is used to prevent incompatible edges from being connected.
@@ -125,7 +139,7 @@ Nodes are linked by dragging from one edge to another. In this example, custom l
 ![link](link.gif)
 
 ### Lasso
-![lasso](lasso.gif)
+![test](test.mp4)
 
 ### Undo
-![undo](undo.gif)
+![undo](undo.gif) -->

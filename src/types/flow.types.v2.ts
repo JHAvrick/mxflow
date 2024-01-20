@@ -654,6 +654,7 @@ interface Api {
  * Events emmitted and their parameters
  */
 interface FlowEventMap {
+    'action': Action[],
     'transform': Transform,
     'preselected': Map<string, SelectableItem>,
     'selected': Map<string, SelectableItem>,

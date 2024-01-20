@@ -46,7 +46,7 @@
 .mxflow-node {
     background: #1f2940;
     border-radius: 5px;
-    border: 2px solid #1f2940;
+    border: 2px solid #ffffff1a;
     /* box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);  */
     box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
     transition: background 100ms;

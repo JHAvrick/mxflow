@@ -29,7 +29,7 @@
  * Applied specifically to input edge list
  */
 .mxflow-edge-group[data-mxflow-edge-group="inputs"] {
-    top: 10px;
+    top: 0px;
     left: 0;
 }
 
@@ -37,7 +37,7 @@
  * Applied specifically to output edge list
  */
  .mxflow-edge-group[data-mxflow-edge-group="outputs"] {
-    top: 10px;
+    top: 0px;
     right: 0;
 }
 
